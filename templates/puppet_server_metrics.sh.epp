@@ -1,0 +1,8 @@
+<%- | String        $output_dir,
+      Array[String] $hosts,
+| -%>
+
+<% $hosts.each | $host | { -%>
+curl -k https://<%= $host %>:8140/status/v1/services?level=debug | python -m json.tool > <%= $output_dir %>/<%= $host %>.json
+<% } -%>
+tar -zcvf <%= $output_dir %>-`date +'%m_%d_%y_%R'`.tar.gz <%= $output_dir %>/

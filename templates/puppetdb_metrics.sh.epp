@@ -1,0 +1,16 @@
+<%- | String        $output_dir,
+      Array[String] $hosts,
+| -%>
+
+<% $hosts.each | $host | { -%>
+  echo 'curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.8.processing-time'
+  curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.8.processing-time > <%= $output_dir %>/<%= $host %>.json
+  echo 'curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.4.processing-time'
+  curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.4.processing-time > <%= $output_dir %>/<%= $host %>.json
+  echo 'curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dstore+report.7.processing-time'
+  curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dstore+report.7.processing-time > <%= $output_dir %>/<%= $host %>.json
+  echo 'curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dglobal.message-persistence-time'
+  curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dglobal.message-persistence-time > <%= $output_dir %>/<%= $host %>.json
+  echo 'curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dglobal.command-parse-time'
+  curl -k http://<%= $host %>:8080/metrics/v1/mbeans/puppetlabs.puppetdb.mq%3Aname%3Dglobal.command-parse-time > <%= $output_dir %>/<%= $host %>.json
+<% } -%>
