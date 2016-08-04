@@ -1,5 +1,6 @@
 class pe_metric_curl_cron_jobs (
-  $output_dir = '/opt/puppetlabs/pe_metric_curl_cron_jobs'
+  String        $output_dir    = '/opt/puppetlabs/pe_metric_curl_cron_jobs',
+  Array[String] $metrics_types = ['puppetdb', 'puppet_server'],
 ) {
 
   $scripts_dir        = "${output_dir}/scripts"
@@ -13,7 +14,8 @@ class pe_metric_curl_cron_jobs (
     scripts_dir => $scripts_dir,
   }
 
-  pe_metric_curl_cron_jobs::pe_metric { 'puppetdb': }
-  pe_metric_curl_cron_jobs::pe_metric { 'puppet_server': }
+  $metrics_types.each | $metric | {
+    pe_metric_curl_cron_jobs::pe_metric { $metric : }
+  }
 
 }
