@@ -4,6 +4,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String        $metrics_type = $title,
   Array[String] $hosts        = [ 'localhost' ],
   String        $cron_minute  = '*/5',
+  String        $tidy_age     = '3d',
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -27,6 +28,11 @@ define pe_metric_curl_cron_jobs::pe_metric (
     command => $script_file_name,
     user    => 'root',
     minute  => $cron_minute,
+  }
+
+  tidy { $metrics_output_dir :
+    age     => $tidy_age,
+    recurse => 1,
   }
 
 }
