@@ -3,6 +3,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String        $scripts_dir,
   String        $metrics_type = $title,
   Array[String] $hosts        = [ 'localhost' ],
+  String        $cron_minute  = '*/5',
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -11,12 +12,21 @@ define pe_metric_curl_cron_jobs::pe_metric (
     ensure => directory,
   }
 
-  file { "${scripts_dir}/${metrics_type}_metrics.sh" :
-    ensure => file,
+  $script_file_name = "${scripts_dir}/${metrics_type}_metrics.sh"
+
+  file { $script_file_name :
+    ensure  => file,
     content => epp("pe_metric_curl_cron_jobs/${metrics_type}_metrics.sh.epp",
                   { 'output_dir' => $metrics_output_dir,
                     'hosts'      => $hosts,
                   }),
     mode    => '0744',
   }
+
+  cron { "${metrics_type}_metrics_collection" :
+    command => $script_file_name,
+    user    => 'root',
+    minute  => $cron_minute,
+  }
+
 }
