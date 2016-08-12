@@ -4,6 +4,14 @@
 include pe_metric_curl_cron_jobs
 ```
 
+If you do not want to manage this long term and want to get it up and running quickly you can run it via puppet apply.
+
+```
+cd /tmp;
+git clone https://github.com/npwalker/pe_metric_curl_cron_jobs;
+puppet apply -e "include pe_metric_curl_cron_jobs" --modulepath .
+```
+
 ## What do you get
 
 A new directory `/opt/puppetlabs/pe_metric_curl_cron_jobs` that looks like:
