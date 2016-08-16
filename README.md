@@ -22,9 +22,7 @@ A new directory `/opt/puppetlabs/pe_metric_curl_cron_jobs` that looks like:
 │   ├── localhost-08_10_16_21:50.json
 │   ├── localhost-08_10_16_21:55.json
 │   ├── localhost-08_10_16_22:00.json
-│   └── localhost.json
 └── scripts
-    ├── puppetdb_metrics.sh
     └── puppet_server_metrics.sh
 ```
 
