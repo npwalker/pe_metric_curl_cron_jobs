@@ -14,26 +14,38 @@ puppet apply -e "include pe_metric_curl_cron_jobs" --modulepath .
 
 ## What do you get
 
+By default the module tracks the metrics coming from the status endpoint on Puppetserver and the internal ActiveMQ metrics on PuppetDB.  
+
 A new directory `/opt/puppetlabs/pe_metric_curl_cron_jobs` that looks like:
 
 ```
 /opt/puppetlabs/pe_metric_curl_cron_jobs/
+├── puppetdb
+│   ├── localhost-08_16_16_23:40.json
+│   └── localhost-08_16_16_23:45.json
+│   └── localhost-08_16_16_23:50.json
 ├── puppet_server
-│   ├── localhost-08_10_16_21:50.json
-│   ├── localhost-08_10_16_21:55.json
-│   ├── localhost-08_10_16_22:00.json
+│   ├── localhost-08_16_16_23:40.json
+│   ├── localhost-08_16_16_23:45.json
+│   ├── localhost-08_16_16_23:50.json
 └── scripts
+    ├── puppetdb_metrics.sh
     └── puppet_server_metrics.sh
 ```
 
-A new cronjob:
+New cronjobs:
 
 ```
-crontab -l | grep puppet_server
+crontab -l
+...
 # Puppet Name: puppet_server_metrics_collection
 */5 * * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppet_server_metrics.sh
 # Puppet Name: puppet_server_metrics_tidy
 * 2 * * * puppet apply -e " tidy { '/opt/puppetlabs/pe_metric_curl_cron_jobs/puppet_server' : age => '3d', recurse => 1 } "
+# Puppet Name: puppetdb_metrics_collection
+*/5 * * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppetdb_metrics.sh
+# Puppet Name: puppetdb_metrics_tidy
+* 2 * * * puppet apply -e " tidy { '/opt/puppetlabs/pe_metric_curl_cron_jobs/puppetdb' : age => '3d', recurse => 1 } "
 ```
 
 ## Grepping for Metrics
@@ -44,6 +56,8 @@ You can get useful information with a grep like the one below run from inside of
 grep <metric_name> localhost-*
 ```
 
+### Puppetserver
+
 Example output:
 
 ```
@@ -52,4 +66,32 @@ localhost-08_15_16_10:55.json:                    "average-free-jrubies": 3.6687
 localhost-08_15_16_11:00.json:                    "average-free-jrubies": 4.4209186472147248,
 localhost-08_15_16_11:05.json:                    "average-free-jrubies": 3.610399319630555,
 localhost-08_15_16_11:10.json:                    "average-free-jrubies": 4.9845629308522383,
+```
+
+### PuppetDB
+
+Example output:
+
+```
+grep QueueSize localhost-*
+localhost-08_16_16_23:40.json:  "QueueSize" : 0,
+localhost-08_16_16_23:45.json:  "QueueSize" : 0,
+```
+
+```
+grep CursorMemoryUsage localhost-*
+localhost-08_16_16_23:40.json:  "CursorMemoryUsage" : 0,
+localhost-08_16_16_23:45.json:  "CursorMemoryUsage" : 0,
+```
+
+```
+grep CursorFull localhost-*
+localhost-08_16_16_23:40.json:  "CursorFull" : false,
+localhost-08_16_16_23:45.json:  "CursorFull" : false,
+```
+
+```
+grep CursorPercentUsage localhost-*
+localhost-08_16_16_23:40.json:  "CursorPercentUsage" : 0,
+localhost-08_16_16_23:45.json:  "CursorPercentUsage" : 0,
 ```
