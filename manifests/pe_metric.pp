@@ -30,9 +30,12 @@ define pe_metric_curl_cron_jobs::pe_metric (
     minute  => $cron_minute,
   }
 
-  tidy { $metrics_output_dir :
-    age     => $tidy_age,
-    recurse => 1,
+  cron { "${metrics_type}_metrics_tidy" :
+    command => epp("pe_metric_curl_cron_jobs/tidy_apply.epp",
+                  { 'output_dir' => $metrics_output_dir,
+                    'tidy_age'   => $tidy_age,
+                  }),
+    user    => 'root',
+    hour    => '2',
   }
-
 }

@@ -1,0 +1,4 @@
+<%- | String $output_dir,
+      String $tidy_age,
+| -%>
+puppet apply -e " tidy { '<%= $output_dir %>' : age => '<%= $tidy_age %>', recurse => 1 } "
