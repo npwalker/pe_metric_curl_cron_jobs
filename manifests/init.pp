@@ -1,6 +1,6 @@
 class pe_metric_curl_cron_jobs (
   String        $output_dir    = '/opt/puppetlabs/pe_metric_curl_cron_jobs',
-  Array[String] $metrics_types = ['puppet_server'],
+  Array[String] $metrics_types = ['puppet_server', 'puppetdb'],
 ) {
 
   $scripts_dir        = "${output_dir}/scripts"
