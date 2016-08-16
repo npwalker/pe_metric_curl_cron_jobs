@@ -34,4 +34,6 @@ A new cronjob:
 crontab -l | grep puppet_server
 # Puppet Name: puppet_server_metrics_collection
 */5 * * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppet_server_metrics.sh
+# Puppet Name: puppet_server_metrics_tidy
+* 2 * * * puppet apply -e " tidy { '/opt/puppetlabs/pe_metric_curl_cron_jobs/puppet_server' : age => '3d', recurse => 1 } "
 ```
