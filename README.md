@@ -6,13 +6,43 @@ include pe_metric_curl_cron_jobs
 
 If you do not want to manage this long term and want to get it up and running quickly you can run it via puppet apply.
 
+## Monolithic Install
+
 ```
 cd /tmp;
 git clone https://github.com/npwalker/pe_metric_curl_cron_jobs;
-puppet apply -e "include pe_metric_curl_cron_jobs" --modulepath .
+puppet apply -e "class { 'pe_metric_curl_cron_jobs': }" --modulepath .
 ```
 
-## What do you get
+## Split Install ( Running on the Master )
+
+```
+cd /tmp;
+git clone https://github.com/npwalker/pe_metric_curl_cron_jobs;
+puppet apply -e "class { 'pe_metric_curl_cron_jobs' : puppetdb_hosts => ['split-puppetdb.domain.com'] }" --modulepath .
+```
+
+## Monolithic With Compile Masters ( Running on the MoM )
+
+```
+cd /tmp;
+git clone https://github.com/npwalker/pe_metric_curl_cron_jobs;
+puppet apply -e "class { 'pe_metric_curl_cron_jobs' : puppet_server_hosts => ['compile-master-1.domain.com', 'compile-master-2.domain.com'] }" --modulepath .
+```
+
+## Split With Compile Masters ( Running on the MoM )
+
+```
+cd /tmp;
+git clone https://github.com/npwalker/pe_metric_curl_cron_jobs;
+puppet apply -e "class { 'pe_metric_curl_cron_jobs' : puppetdb_hosts => ['split-puppetdb.domain.com'], puppet_server_hosts => ['compile-master-1.domain.com', 'compile-master-2.domain.com'] }" --modulepath .
+```
+
+## Other Option
+
+This option puts metrics on each individual node so I don't think it's as good as having centrally gathered metrics but you can also install the module on each individual node.  If you install on a compile master you can set `puppetdb_metrics_ensure` to `absent` and if you install on a puppetdb node then you can set `$puppet_server_metrics_ensure` to `absent`.
+
+# What do you get
 
 By default the module tracks the metrics coming from the status endpoint on Puppetserver and the internal ActiveMQ metrics on PuppetDB.  
 
