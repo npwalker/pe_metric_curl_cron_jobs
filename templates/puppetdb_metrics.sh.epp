@@ -3,6 +3,6 @@
 | -%>
 
 <% $hosts.each | $host | { -%>
-  echo 'curl -k http://<%= $host %>:8080/metrics/v1/mbeans/org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' >> <%= $output_dir %>/<%= $host %>-`date +'%m_%d_%y_%R'`.json
-  curl -k http://<%= $host %>:8080/metrics/v1/mbeans/org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands >> <%= $output_dir %>/<%= $host %>-`date +'%m_%d_%y_%R'`.json
+  echo 'curl -k https://<%= $host %>:8081/metrics/v1/mbeans/org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' --cert /etc/puppetlabs/puppet/ssl/certs/<%= $::clientcert %>.pem --key /etc/puppetlabs/puppet/ssl/private_keys/<%= $::clientcert %>.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem >> <%= $output_dir %>/<%= $host %>-`date +'%m_%d_%y_%R'`.json
+  curl -k https://<%= $host %>:8081/metrics/v1/mbeans/org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands --cert /etc/puppetlabs/puppet/ssl/certs/<%= $::clientcert %>.pem --key /etc/puppetlabs/puppet/ssl/private_keys/<%= $::clientcert %>.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem >> <%= $output_dir %>/<%= $host %>-`date +'%m_%d_%y_%R'`.json
 <% } -%>
