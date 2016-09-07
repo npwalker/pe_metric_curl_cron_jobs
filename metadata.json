@@ -1,6 +1,6 @@
 {
   "name": "npwalker/pe_metric_curl_cron_jobs",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "author": "npwalker",
   "summary": "A Module for setting up cron jobs to curl metrics from PE components",
   "license": "Apache-2.0",
