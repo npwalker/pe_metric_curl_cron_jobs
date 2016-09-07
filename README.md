@@ -1,3 +1,17 @@
+Table of Contents
+=================
+
+  * [How to use](#how-to-use)
+    * [Monolithic Install](#monolithic-install)
+    * [Split Install ( Running on the Master )](#split-install--running-on-the-master-)
+    * [Monolithic With Compile Masters ( Running on the MoM )](#monolithic-with-compile-masters--running-on-the-mom-)
+    * [Split With Compile Masters ( Running on the MoM )](#split-with-compile-masters--running-on-the-mom-)
+    * [Other Option](#other-option)
+  * [What do you get](#what-do-you-get)
+    * [Grepping for Metrics](#grepping-for-metrics)
+      * [Puppetserver](#puppetserver)
+      * [PuppetDB](#puppetdb)
+
 # How to use
 
 ```
