@@ -2,7 +2,7 @@
       Array[String] $hosts,
 | -%>
 <%
-  $metrics_array = [
+  $metrics_base = [
                     { 'url' => 'org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands',
                       'name' => '' },
                     { 'url' => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time',
@@ -13,7 +13,41 @@
                       'name' => 'replace_catalog_time_'},
                     { 'url' => 'puppetlabs.puppetdb.storage%3Aname%3Dreplace-facts-time',
                       'name' => 'replace_facts_time_'},
+                    { 'url' => 'puppetlabs.puppetdb.storage%3Aname%3Dstore-report-time',
+                      'name' => 'store_report_time_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retried',
+                      'name' => 'global_retried_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-counts',
+                      'name' => 'global_retry_counts_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-persistence-time',
+                      'name' => 'global_retry_persistence_time_'},
+                  ]
+
+  $metrics_20164 = [
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retried',
+                      'name' => 'replace_catalog_retried_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retry-counts',
+                      'name' => 'replace_catalog_retry_counts_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retry-persistence-time',
+                      'name' => 'replace_catalog_retry_persistence_time_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.5.retried',
+                      'name' => 'replace_facts_retried_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.5.retry-counts',
+                      'name' => 'replace_facts_retry_counts_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.5.retry-persistence-time',
+                      'name' => 'replace_facts_retry_persistence_time_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retried',
+                      'name' => 'store_report_retried_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retry-counts',
+                      'name' => 'store_reports_retry_counts_'},
+                    { 'url' => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retry-persistence-time',
+                      'name' => 'store_report_retry_persistence_time_'},
                    ]
+
+    $metrics_array = $::pe_server_version ? {
+      /^2016.4./ => $metrics_base + $metrics_20164,
+      default    => $metrics_base
+    }
 -%>
 <% $hosts.each | $host | {
      $metrics_array.each | $metric | {
