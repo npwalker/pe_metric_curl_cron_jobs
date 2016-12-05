@@ -1,4 +1,4 @@
 <%- | String $output_dir,
       String $tidy_age,
 | -%>
-/opt/puppetlabs/puppet/bin/puppet apply -e " tidy { '<%= $output_dir %>' : age => '<%= $tidy_age %>', recurse => 1 } "
+/opt/puppetlabs/puppet/bin/puppet apply -e " tidy { '<%= $output_dir %>' : age => '<%= $tidy_age %>', recurse => 1, type => 'mtime' } "
