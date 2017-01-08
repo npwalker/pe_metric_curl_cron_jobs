@@ -1,0 +1,4 @@
+<%- | String $output_dir,
+      Integer $tidy_age,
+| -%>
+find '<%= $output_dir %>' -type f -mtime <%= $tidy_age %> -delete -print
