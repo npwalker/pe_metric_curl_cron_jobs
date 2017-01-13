@@ -5,7 +5,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String                    $metrics_type  = $title,
   Array[String]             $hosts         = [ '127.0.0.1' ],
   String                    $cron_minute   = '*/5',
-  String                    $tidy_age      = '3d',
+  Integer                   $retention_days = 3,
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -34,9 +34,9 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   cron { "${metrics_type}_metrics_tidy" :
     ensure  => $metric_ensure,
-    command => epp("pe_metric_curl_cron_jobs/tidy_apply.epp",
-                  { 'output_dir' => $metrics_output_dir,
-                    'tidy_age'   => $tidy_age,
+    command => epp("pe_metric_curl_cron_jobs/find_cron.epp",
+                  { 'output_dir'     => $metrics_output_dir,
+                    'retention_days' => $retention_days,
                   }),
     user    => 'root',
     hour    => '2',
