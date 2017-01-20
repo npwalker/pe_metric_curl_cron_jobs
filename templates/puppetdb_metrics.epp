@@ -1,0 +1,34 @@
+<%- | String        $output_dir,
+      Array[String] $hosts,
+      Array[Hash]   $data,
+| -%>
+#!/opt/puppetlabs/puppet/bin/ruby
+
+require "net/https"
+require "json"
+require "uri"
+require 'time'
+
+def get_endpoint(url)
+  uri  = URI.parse(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.cert = OpenSSL::X509::Certificate.new(File.read('/etc/puppetlabs/puppet/ssl/certs/<%= $::clientcert %>.pem'))
+  http.key  = OpenSSL::PKey::RSA.new(File.read('/etc/puppetlabs/puppet/ssl/private_keys/<%= $::clientcert %>.pem'))
+  http.ca_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem'
+  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  data = JSON.parse(http.get(uri.request_uri).body)
+end
+
+dataset = {'servers' => {}}
+timestamp = Time.now.utc.iso8601
+
+<% $hosts.each |$host| { -%>
+hostkey = '<%= $host %>'.gsub('.', '-')
+dataset['servers'][hostkey] = {'puppetdb' => {}}
+<% $data.each |$metric| { -%>
+dataset['servers'][hostkey]['puppetdb']["<%= $metric['name'] %>"] = get_endpoint("https://<%= $host %>:8081/metrics/v1/mbeans/<%= $metric['url'] %>")
+<% } -%>
+
+<% } -%>
+File.open("<%= $output_dir %>/#{timestamp}.json", 'w') { |file| file.write(JSON.pretty_generate(dataset)) }

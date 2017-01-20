@@ -1,0 +1,22 @@
+<%- | String        $output_dir,
+      Array[String] $hosts,
+      Any           $data,
+| -%>
+#!/opt/puppetlabs/puppet/bin/ruby
+
+require 'json'
+require 'open-uri'
+require 'openssl'
+require 'time'
+
+timestamp = Time.now.utc.iso8601
+dataset = {'servers' => {}}
+
+<% $hosts.each | $host | { -%>
+hostkey = '<%= $host %>'.gsub('.', '-')
+uri = URI.parse('https://<%= $host %>:8140/status/v1/services?level=debug')
+metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
+dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
+
+<% } -%>
+File.open("<%= $output_dir %>/#{timestamp}.json", 'w') { |file| file.write(JSON.pretty_generate(dataset)) }
