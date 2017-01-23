@@ -14,10 +14,12 @@ dataset = {'servers' => {}}
 
 <% $hosts.each | $host | { -%>
 begin
+  begin_time = Time.now
   hostkey = '<%= $host %>'.gsub('.', '-')
   uri = URI.parse('https://<%= $host %>:8140/status/v1/services?level=debug')
   metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
   dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
+  dataset['servers'][hostkey]['puppetserver']['api-query-time'] = Time.now - begin_time
 rescue
   STDERR.puts "Error adding metrics for <%= $host %>"
 end

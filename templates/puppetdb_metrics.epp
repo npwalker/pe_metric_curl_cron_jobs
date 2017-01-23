@@ -25,11 +25,13 @@ timestamp = Time.now.utc.iso8601
 
 <% $hosts.each |$host| { -%>
 begin
+  begin_time = Time.now
   hostkey = '<%= $host %>'.gsub('.', '-')
   dataset['servers'][hostkey] = {'puppetdb' => {}}
 <% $data.each |$metric| { -%>
   dataset['servers'][hostkey]['puppetdb']["<%= $metric['name'] %>"] = get_endpoint("https://<%= $host %>:8081/metrics/v1/mbeans/<%= $metric['url'] %>")
 <% } -%>
+  dataset['servers'][hostkey]['puppetdb']['api-query-time'] = Time.now - begin_time
 rescue
   STDERR.puts "Error adding metrics for <%= $host %>"
 end
