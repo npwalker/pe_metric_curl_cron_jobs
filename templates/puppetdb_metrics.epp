@@ -1,6 +1,5 @@
 <%- | String        $output_dir,
       Array[String] $hosts,
-      Array[Hash]   $data,
 | -%>
 #!/opt/puppetlabs/puppet/bin/ruby
 
@@ -18,9 +17,43 @@ HOSTS = [
 ]
 
 METRICS = [
-<% $data.each |$metric| { -%>
-  { 'name' => "<%= $metric['name'] %>",
-    'url'  => "<%= $metric['url'] %>" },
+  { 'name' => 'commands_queue',
+    'url'  => 'org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' },
+  { 'name' => 'catalog_hash_miss',
+    'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time' },
+  { 'name' => 'catalog_hash_match',
+    'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-match-time' },
+  { 'name' => 'replace_catalog_time',
+    'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dreplace-catalog-time' },
+  { 'name' => 'replace_facts_time',
+    'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dreplace-facts-time' },
+  { 'name' => 'store_report_time',
+    'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dstore-report-time' },
+  { 'name' => 'global_retried',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retried' },
+  { 'name' => 'global_retry_counts',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-counts' },
+  { 'name' => 'global_retry_persistence_time',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-persistence-time' },
+<% if versioncmp($::pe_server_version, '2016.4.0') >= 0 { -%>
+  { 'name' => 'replace_catalog_retried',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retried' },
+  { 'name' => 'replace_catalog_retry_counts',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retry-counts' },
+  { 'name' => 'replace_catalog_retry_persistence_time',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retry-persistence-time' },
+  { 'name' => 'replace_facts_retried',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.5.retried' },
+  { 'name' => 'replace_facts_retry_counts',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.5.retry-counts' },
+  { 'name' => 'replace_facts_retry_persistence_time',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.5.retry-persistence-time' },
+  { 'name' => 'store_report_retried',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retried' },
+  { 'name' => 'store_reports_retry_counts',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retry-counts' },
+  { 'name' => 'store_report_retry_persistence_time',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retry-persistence-time' },
 <% } -%>
 ]
 
@@ -35,7 +68,7 @@ def get_endpoint(url)
   data = JSON.parse(http.get(uri.request_uri).body)
 end
 
-script_time = Time.now.utc.iso8601
+filename_timestamp = Time.now.utc.strftime('%Y%m%dT%H%M%SZ')
 
 HOSTS.each do |host|
   begin
@@ -51,7 +84,7 @@ HOSTS.each do |host|
     end
 
     dataset['servers'][hostkey]['puppetdb']['api-query-duration'] = Time.now - timestamp
-    File.open("#{OUTPUT_DIR}/#{hostkey}.#{script_time}.json", 'w') do |file|
+    File.open("#{OUTPUT_DIR}/#{hostkey}.#{filename_timestamp}.json", 'w') do |file|
       file.write(JSON.pretty_generate(dataset))
     end
   rescue Exception => e

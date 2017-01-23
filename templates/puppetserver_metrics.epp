@@ -1,6 +1,5 @@
 <%- | String        $output_dir,
       Array[String] $hosts,
-      Any           $data,
 | -%>
 #!/opt/puppetlabs/puppet/bin/ruby
 
@@ -17,7 +16,7 @@ HOSTS = [
 <% } -%>
 ]
 
-script_time = Time.now.utc.iso8601
+filename_timestamp = Time.now.utc.strftime('%Y%m%dT%H%M%SZ')
 
 HOSTS.each do |host|
   begin
@@ -29,7 +28,7 @@ HOSTS.each do |host|
     dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
     dataset['servers'][hostkey]['puppetserver']['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey]['puppetserver']['api-query-duration'] = Time.now - timestamp
-    File.open("#{OUTPUT_DIR}/#{hostkey}.#{script_time}.json", 'w') do |file|
+    File.open("#{OUTPUT_DIR}/#{hostkey}.#{filename_timestamp}.json", 'w') do |file|
       file.write(JSON.pretty_generate(dataset))
     end
   rescue Exception => e
