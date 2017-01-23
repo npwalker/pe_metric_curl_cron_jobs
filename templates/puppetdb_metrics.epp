@@ -39,8 +39,8 @@ script_time = Time.now.utc.iso8601
 
 HOSTS.each do |host|
   begin
-    dataset = {'servers' => {}}
     timestamp = Time.now
+    dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
     dataset['servers'][hostkey] = {'puppetdb' => {}}
     dataset['servers'][hostkey]['puppetdb']['api-query-start'] = timestamp.utc.iso8601

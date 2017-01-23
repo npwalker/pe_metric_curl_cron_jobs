@@ -21,8 +21,8 @@ script_time = Time.now.utc.iso8601
 
 HOSTS.each do |host|
   begin
-    dataset = {'servers' => {}}
     timestamp = Time.now
+    dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
     uri = URI.parse("https://#{host}:8140/status/v1/services?level=debug")
     metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
