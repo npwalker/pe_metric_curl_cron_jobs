@@ -24,11 +24,15 @@ dataset = {'servers' => {}}
 timestamp = Time.now.utc.iso8601
 
 <% $hosts.each |$host| { -%>
-hostkey = '<%= $host %>'.gsub('.', '-')
-dataset['servers'][hostkey] = {'puppetdb' => {}}
+begin
+  hostkey = '<%= $host %>'.gsub('.', '-')
+  dataset['servers'][hostkey] = {'puppetdb' => {}}
 <% $data.each |$metric| { -%>
-dataset['servers'][hostkey]['puppetdb']["<%= $metric['name'] %>"] = get_endpoint("https://<%= $host %>:8081/metrics/v1/mbeans/<%= $metric['url'] %>")
+  dataset['servers'][hostkey]['puppetdb']["<%= $metric['name'] %>"] = get_endpoint("https://<%= $host %>:8081/metrics/v1/mbeans/<%= $metric['url'] %>")
 <% } -%>
+rescue
+  STDERR.puts "Error adding metrics for <%= $host %>"
+end
 
 <% } -%>
 File.open("<%= $output_dir %>/#{timestamp}.json", 'w') { |file| file.write(JSON.pretty_generate(dataset)) }
