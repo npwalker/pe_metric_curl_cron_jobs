@@ -9,20 +9,30 @@ require 'open-uri'
 require 'openssl'
 require 'time'
 
-timestamp = Time.now.utc.iso8601
-dataset = {'servers' => {}}
+OUTPUT_DIR = "<%= $output_dir %>"
 
-<% $hosts.each | $host | { -%>
-begin
-  begin_time = Time.now
-  hostkey = '<%= $host %>'.gsub('.', '-')
-  uri = URI.parse('https://<%= $host %>:8140/status/v1/services?level=debug')
-  metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
-  dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
-  dataset['servers'][hostkey]['puppetserver']['api-query-time'] = Time.now - begin_time
-rescue
-  STDERR.puts "Error adding metrics for <%= $host %>"
-end
-
+HOSTS = [
+<% $hosts.each |$host| { -%>
+  "<%= $host %>",
 <% } -%>
-File.open("<%= $output_dir %>/#{timestamp}.json", 'w') { |file| file.write(JSON.pretty_generate(dataset)) }
+]
+
+script_time = Time.now.utc.iso8601
+
+HOSTS.each do |host|
+  begin
+    dataset = {'servers' => {}}
+    timestamp = Time.now
+    hostkey = host.gsub('.', '-')
+    uri = URI.parse("https://#{host}:8140/status/v1/services?level=debug")
+    metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
+    dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
+    dataset['servers'][hostkey]['puppetserver']['api-query-start'] = timestamp.utc.iso8601
+    dataset['servers'][hostkey]['puppetserver']['api-query-duration'] = Time.now - timestamp
+    File.open("#{OUTPUT_DIR}/#{hostkey}.#{script_time}.json", 'w') do |file|
+      file.write(JSON.pretty_generate(dataset))
+    end
+  rescue Exception => e
+    STDERR.puts "Error adding metrics for #{host}: #{e}"
+  end
+end

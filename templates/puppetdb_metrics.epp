@@ -9,6 +9,21 @@ require "json"
 require "uri"
 require 'time'
 
+OUTPUT_DIR = "<%= $output_dir %>"
+
+HOSTS = [
+<% $hosts.each |$host| { -%>
+  "<%= $host %>",
+<% } -%>
+]
+
+METRICS = [
+<% $data.each |$metric| { -%>
+  { 'name' => "<%= $metric['name'] %>",
+    'url'  => "<%= $metric['url'] %>" },
+<% } -%>
+]
+
 def get_endpoint(url)
   uri  = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
@@ -20,21 +35,26 @@ def get_endpoint(url)
   data = JSON.parse(http.get(uri.request_uri).body)
 end
 
-dataset = {'servers' => {}}
-timestamp = Time.now.utc.iso8601
+script_time = Time.now.utc.iso8601
 
-<% $hosts.each |$host| { -%>
-begin
-  begin_time = Time.now
-  hostkey = '<%= $host %>'.gsub('.', '-')
-  dataset['servers'][hostkey] = {'puppetdb' => {}}
-<% $data.each |$metric| { -%>
-  dataset['servers'][hostkey]['puppetdb']["<%= $metric['name'] %>"] = get_endpoint("https://<%= $host %>:8081/metrics/v1/mbeans/<%= $metric['url'] %>")
-<% } -%>
-  dataset['servers'][hostkey]['puppetdb']['api-query-time'] = Time.now - begin_time
-rescue
-  STDERR.puts "Error adding metrics for <%= $host %>"
+HOSTS.each do |host|
+  begin
+    dataset = {'servers' => {}}
+    timestamp = Time.now
+    hostkey = host.gsub('.', '-')
+    dataset['servers'][hostkey] = {'puppetdb' => {}}
+    dataset['servers'][hostkey]['puppetdb']['api-query-start'] = timestamp.utc.iso8601
+
+    METRICS.each do |metric|
+      endpoint = "https://#{host}:8081/metrics/v1/mbeans/#{metric['url']}"
+      dataset['servers'][hostkey]['puppetdb'][metric['name']] = get_endpoint(endpoint)
+    end
+
+    dataset['servers'][hostkey]['puppetdb']['api-query-duration'] = Time.now - timestamp
+    File.open("#{OUTPUT_DIR}/#{hostkey}.#{script_time}.json", 'w') do |file|
+      file.write(JSON.pretty_generate(dataset))
+    end
+  rescue Exception => e
+    STDERR.puts "Error getting metrics for #{host}: #{e}"
+  end
 end
-
-<% } -%>
-File.open("<%= $output_dir %>/#{timestamp}.json", 'w') { |file| file.write(JSON.pretty_generate(dataset)) }
