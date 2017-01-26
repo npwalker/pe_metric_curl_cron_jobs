@@ -3,5 +3,5 @@
 | -%>
 
 <% $hosts.each | $host | { -%>
-curl -k https://<%= $host %>:8140/status/v1/services?level=debug | python -m json.tool > <%= $output_dir %>/<%= $host %>-`date +'%m_%d_%y_%R'`.json
+curl -s -k https://<%= $host %>:8140/status/v1/services?level=debug | python -m json.tool > <%= $output_dir %>/<%= $host %>-`date +'%m_%d_%y_%R'`.json
 <% } -%>
