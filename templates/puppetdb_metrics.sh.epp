@@ -51,7 +51,7 @@
 -%>
 <% $hosts.each | $host | {
      $metrics_array.each | $metric | {
-       $curl_command = "curl -k https://${host}:8081/metrics/v1/mbeans/${metric['url']}"
+       $curl_command = "curl -s -k https://${host}:8081/metrics/v1/mbeans/${metric['url']}"
        $curl_certs   = "--cert /etc/puppetlabs/puppet/ssl/certs/${::clientcert}.pem --key /etc/puppetlabs/puppet/ssl/private_keys/${::clientcert}.pem --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem >> ${output_dir}/${metric['name']}${host}-`date +'%m_%d_%y_%R'`.json"
 -%>
 
