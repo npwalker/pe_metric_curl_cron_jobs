@@ -16,7 +16,7 @@ HOSTS = [
 <% } -%>
 ]
 
-filename_timestamp = Time.now.utc.strftime('%Y%m%dT%H%M%SZ')
+filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
 HOSTS.each do |host|
   begin
@@ -28,8 +28,12 @@ HOSTS.each do |host|
     dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
     dataset['servers'][hostkey]['puppetserver']['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey]['puppetserver']['api-query-duration'] = Time.now - timestamp
-    File.open("#{OUTPUT_DIR}/#{hostkey}.#{filename_timestamp}.json", 'w') do |file|
-      file.write(JSON.pretty_generate(dataset))
+
+    Dir.chdir(OUTPUT_DIR) do
+      Dir.mkdir(host) unless File.exist?(host)
+      File.open(File.join(host, filename), 'w') do |file|
+        file.write(JSON.pretty_generate(dataset))
+      end
     end
   rescue Exception => e
     STDERR.puts "Error adding metrics for #{host}: #{e}"

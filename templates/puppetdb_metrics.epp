@@ -68,7 +68,7 @@ def get_endpoint(url)
   data = JSON.parse(http.get(uri.request_uri).body)
 end
 
-filename_timestamp = Time.now.utc.strftime('%Y%m%dT%H%M%SZ')
+filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
 HOSTS.each do |host|
   begin
@@ -84,8 +84,12 @@ HOSTS.each do |host|
     end
 
     dataset['servers'][hostkey]['puppetdb']['api-query-duration'] = Time.now - timestamp
-    File.open("#{OUTPUT_DIR}/#{hostkey}.#{filename_timestamp}.json", 'w') do |file|
-      file.write(JSON.pretty_generate(dataset))
+
+    Dir.chdir(OUTPUT_DIR) do
+      Dir.mkdir(host) unless File.exist?(host)
+      File.open(File.join(host, filename), 'w') do |file|
+        file.write(JSON.pretty_generate(dataset))
+      end
     end
   rescue Exception => e
     STDERR.puts "Error getting metrics for #{host}: #{e}"
