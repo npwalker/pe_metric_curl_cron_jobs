@@ -11,7 +11,10 @@ define pe_metric_curl_cron_jobs::pe_metric (
   $metrics_output_dir = "${output_dir}/${metrics_type}"
 
   file { $metrics_output_dir :
-    ensure => directory,
+    ensure => $metric_ensure ? {
+      'present' => directory,
+      'absent'  => absent,
+    },
   }
 
   $script_file_name = "${scripts_dir}/${metrics_type}_metrics"
