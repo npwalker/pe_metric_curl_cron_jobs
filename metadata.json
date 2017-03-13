@@ -1,13 +1,15 @@
 {
   "name": "npwalker/pe_metric_curl_cron_jobs",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "author": "npwalker",
-  "summary": "A Module for setting up cron jobs to curl metrics from PE components",
+  "summary": "A Puppet module for gathering metrics from PE components",
   "license": "Apache-2.0",
   "source": "https://github.com/npwalker/pe_metric_curl_cron_jobs",
   "project_page": "https://github.com/npwalker/pe_metric_curl_cron_jobs",
   "issues_url": "https://github.com/npwalker/pe_metric_curl_cron_jobs/issues",
-  "dependencies": [],
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 2.6.0 < 5.0.0"},
+  ],
   "operatingsystem_support": [
     {
       "operatingsystem": "RedHat",
