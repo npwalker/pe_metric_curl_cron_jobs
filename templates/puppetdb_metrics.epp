@@ -24,6 +24,10 @@ METRICS = [
   { 'name' => 'amq_metrics',
     'url'  => 'org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' },
 <% } -%>
+  { 'name' => 'command_processing_time',
+    'url'  => 'puppetlabs.puppetdb.mq:name=global.processing-time' },
+  { 'name' => 'command_processed',
+    'url'  => 'puppetlabs.puppetdb.mq:name=global.processed' },
   { 'name' => 'catalog_hash_miss',
     'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time' },
   { 'name' => 'catalog_hash_match',
