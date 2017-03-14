@@ -17,8 +17,13 @@ HOSTS = [
 ]
 
 METRICS = [
-  { 'name' => 'commands_queue',
+<% if versioncmp($::pe_server_version, '2017.1.0') >= 0 { -%>
+  { 'name' => 'command_queue_depth',
+    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.depth' },
+<% } else { -%>
+  { 'name' => 'amq_metrics',
     'url'  => 'org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' },
+<% } -%>
   { 'name' => 'catalog_hash_miss',
     'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time' },
   { 'name' => 'catalog_hash_match',
