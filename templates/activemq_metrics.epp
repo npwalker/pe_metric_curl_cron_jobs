@@ -1,0 +1,122 @@
+<%- | String        $output_dir,
+      Array[String] $hosts,
+| -%>
+#!/opt/puppetlabs/puppet/bin/ruby
+
+require "net/https"
+require "json"
+require "uri"
+require 'time'
+
+OUTPUT_DIR = "<%= $output_dir %>"
+
+HOSTS = [
+<% $hosts.each |$host| { -%>
+  "<%= $host %>",
+<% } -%>
+]
+
+POST_DATA = '
+  [
+    {
+      "type": "read",
+      "mbean": "java.lang:type=Memory",
+      "attribute": "HeapMemoryUsage,NonHeapMemoryUsage"
+    },
+    {
+      "type": "read",
+      "mbean": "java.lang:name=*,type=GarbageCollector",
+      "attribute": "CollectionCount"
+    },
+    {
+      "type": "read",
+      "mbean": "java.lang:type=Runtime",
+      "attribute": "Uptime"
+    },
+    {
+      "type": "read",
+      "mbean": "java.lang:type=OperatingSystem",
+      "attribute": "OpenFileDescriptorCount,MaxFileDescriptorCount"
+    },
+    {
+      "type": "read",
+      "mbean": "org.apache.activemq:brokerName=*,type=Broker",
+      "attribute": "MemoryLimit,MemoryPercentUsage,CurrentConnectionsCount"
+    },
+    {
+      "type": "read",
+      "mbean": "org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=mcollective.*",
+      "attribute": "AverageBlockedTime,AverageEnqueueTime,AverageMessageSize,ConsumerCount,DequeueCount,DispatchCount,EnqueueCount,ExpiredCount,ForwardCount,InFlightCount,ProducerCount,QueueSize",
+    },
+    {
+      "type": "read",
+      "mbean": "org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=mcollective.*.agent",
+      "attribute": "AverageBlockedTime,AverageEnqueueTime,AverageMessageSize,ConsumerCount,DequeueCount,DispatchCount,EnqueueCount,ExpiredCount,ForwardCount,InFlightCount,ProducerCount,QueueSize",
+    },
+  ]
+'
+
+filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
+
+def recurse_merge!(a,b)
+  a.merge!(b) do |_,aa,bb|
+    (aa.is_a?(Hash) && bb.is_a?(Hash)) ? recurse_merge!(aa,bb) : bb
+  end
+end
+
+def tree_components(string)
+  attributes = string.split(/[:,]/).map { |e| e.split('=').last }
+  components = [attributes.shift]
+  until attributes.empty?
+    components << attributes.pop
+    components << attributes.shift
+  end
+  components.compact
+end
+
+def treeify(mbean, attribute_values)
+  components = tree_components(mbean)
+  components.reverse.inject(attribute_values) { |a, n| { n => a } }
+end
+
+HOSTS.each do |host|
+  begin
+    timestamp = Time.now
+    dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
+    hostkey = host.gsub('.', '-')
+    dataset['servers'][hostkey] = {'activemq' => {}}
+    dataset['servers'][hostkey]['activemq']['api-query-start'] = timestamp.utc.iso8601
+
+    uri = URI.parse("https://#{host}:8161/api/jolokia")
+    http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Post.new(uri.request_uri)
+    request.basic_auth("admin", "admin")
+    request.body = POST_DATA
+    response = http.request(request)
+
+    JSON.parse(response.body).each do |element|
+      case element['value']
+      when Hash
+        element['value'].each do |mbean,attributes|
+          metrics = treeify(mbean, attributes)
+          recurse_merge!(dataset['servers'][hostkey]['activemq'], metrics)
+        end
+      else
+        req = element['request']
+        metrics = treeify(req['mbean'], { req['attribute'] => req['value'] })
+        recurse_merge!(dataset['servers'][hostkey]['activemq'], metrics)
+      end
+    end
+
+    dataset['servers'][hostkey]['activemq']['api-query-duration'] = Time.now - timestamp
+
+    Dir.chdir(OUTPUT_DIR) do
+      Dir.mkdir(host) unless File.exist?(host)
+      File.open(File.join(host, filename), 'w') do |file|
+        file.write(JSON.pretty_generate(dataset))
+      end
+    end
+  rescue Exception => e
+    STDERR.puts "Error getting metrics for #{host}: #{e}"
+  end
+end

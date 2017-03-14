@@ -10,6 +10,8 @@ class pe_metric_curl_cron_jobs (
   String        $puppetdb_metrics_ensure       = 'present',
   Array[String] $puppetdb_hosts                = [ '127.0.0.1' ],
   Integer       $puppetdb_port                 = 8081,
+  String        $activemq_metrics_ensure       = 'absent',
+  Array[String] $activemq_hosts                = [ '127.0.0.1' ],
 ) {
   $scripts_dir = "${output_dir}/scripts"
 
@@ -32,6 +34,12 @@ class pe_metric_curl_cron_jobs (
     metric_ensure => $puppetdb_metrics_ensure,
     hosts         => $puppetdb_hosts,
     metrics_port  => $puppetdb_port,
+  }
+
+  pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
+    metric_ensure => $activemq_metrics_ensure,
+    hosts         => $activemq_hosts,
+    metric_script_template => 'activemq_metrics.epp',
   }
 
   # DEPRECATION MECHANISMS
