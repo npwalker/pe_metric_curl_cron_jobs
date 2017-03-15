@@ -28,6 +28,9 @@ HOSTS.each do |host|
     dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
     dataset['servers'][hostkey]['puppetserver']['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey]['puppetserver']['api-query-duration'] = Time.now - timestamp
+    rescue Exception => e
+      dataset['servers'][hostkey] = { 'puppetserver' => { "error" => "#{e}" } }
+    end
 
     Dir.chdir(OUTPUT_DIR) do
       Dir.mkdir(host) unless File.exist?(host)
@@ -35,7 +38,4 @@ HOSTS.each do |host|
         file.write(JSON.pretty_generate(dataset))
       end
     end
-  rescue Exception => e
-    STDERR.puts "Error adding metrics for #{host}: #{e}"
   end
-end
