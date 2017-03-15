@@ -66,6 +66,8 @@ def get_endpoint(url)
   http.ca_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem'
   http.verify_mode = OpenSSL::SSL::VERIFY_NONE
   data = JSON.parse(http.get(uri.request_uri).body)
+rescue Exception => e
+    data = { "error" => "#{e}" }
 end
 
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
@@ -91,7 +93,5 @@ HOSTS.each do |host|
         file.write(JSON.pretty_generate(dataset))
       end
     end
-  rescue Exception => e
-    STDERR.puts "Error getting metrics for #{host}: #{e}"
   end
 end
