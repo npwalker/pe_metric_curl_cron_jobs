@@ -57,6 +57,8 @@ METRICS = [
 <% } -%>
 ]
 
+$error_array = []
+
 def get_endpoint(url)
   uri  = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
@@ -68,7 +70,8 @@ def get_endpoint(url)
   data = JSON.parse(http.get(uri.request_uri).body)
   data = data.merge({"error" => "", "error_count" => 0})
 rescue Exception => e
-    data = { "error" => "#{e}", "error_count" => 1 }
+    $error_array << "#{e}"
+    data = {}
 end
 
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
@@ -86,6 +89,8 @@ HOSTS.each do |host|
       dataset['servers'][hostkey]['puppetdb'][metric['name']] = get_endpoint(endpoint)
     end
 
+    dataset['servers'][hostkey]['puppetdb']['error'] = $error_array
+    dataset['servers'][hostkey]['puppetdb']['error_count'] = $error_array.count
     dataset['servers'][hostkey]['puppetdb']['api-query-duration'] = Time.now - timestamp
 
     Dir.chdir(OUTPUT_DIR) do
