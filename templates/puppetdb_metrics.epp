@@ -68,7 +68,6 @@ def get_endpoint(url)
   http.ca_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem'
   http.verify_mode = OpenSSL::SSL::VERIFY_NONE
   data = JSON.parse(http.get(uri.request_uri).body)
-  data = data.merge({"error" => "", "error_count" => 0})
 rescue Exception => e
     $error_array << "#{e}"
     data = {}
