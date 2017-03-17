@@ -18,14 +18,23 @@ HOSTS = [
 
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
+def get_status_endpoint(host)
+  uri = URI.parse("https://#{host}:8140/status/v1/services?level=debug")
+  metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
+  data = JSON.parse(metrics)
+  data = data.merge({"error" => "", "error_count" => 0})
+rescue Exception => e
+    data = { "error" => "#{e}", "error_count" => 1 }
+end
+
 HOSTS.each do |host|
   begin
     timestamp = Time.now
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
-    uri = URI.parse("https://#{host}:8140/status/v1/services?level=debug")
-    metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
-    dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
+
+    metrics = get_status_endpoint(host)
+    dataset['servers'][hostkey] = {'puppetserver' => metrics}
     dataset['servers'][hostkey]['puppetserver']['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey]['puppetserver']['api-query-duration'] = Time.now - timestamp
 
@@ -35,7 +44,5 @@ HOSTS.each do |host|
         file.write(JSON.pretty_generate(dataset))
       end
     end
-  rescue Exception => e
-    STDERR.puts "Error adding metrics for #{host}: #{e}"
   end
 end
