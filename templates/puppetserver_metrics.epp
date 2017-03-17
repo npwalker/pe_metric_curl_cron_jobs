@@ -18,19 +18,24 @@ HOSTS = [
 
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
+def get_status_endpoint(host)
+  uri = URI.parse("https://#{host}:8140/status/v1/services?level=debug")
+  metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
+  data = JSON.parse(metrics)
+rescue Exception => e
+    data = { "error" => "#{e}" }
+end
+
 HOSTS.each do |host|
   begin
     timestamp = Time.now
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
-    uri = URI.parse("https://#{host}:8140/status/v1/services?level=debug")
-    metrics = open(uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE}).read
-    dataset['servers'][hostkey] = {'puppetserver' => JSON.parse(metrics)}
+
+    metrics = get_status_endpoint(host)
+    dataset['servers'][hostkey] = {'puppetserver' => metrics}
     dataset['servers'][hostkey]['puppetserver']['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey]['puppetserver']['api-query-duration'] = Time.now - timestamp
-    rescue Exception => e
-      dataset['servers'][hostkey] = { 'puppetserver' => { "error" => "#{e}" } }
-    end
 
     Dir.chdir(OUTPUT_DIR) do
       Dir.mkdir(host) unless File.exist?(host)
@@ -39,3 +44,4 @@ HOSTS.each do |host|
       end
     end
   end
+end
