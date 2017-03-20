@@ -1,5 +1,7 @@
 <%- | String        $output_dir,
       Array[String] $hosts,
+      String        $metrics_type,
+      Integer       $metrics_port,
 | -%>
 #!/opt/puppetlabs/puppet/bin/ruby
 
@@ -9,18 +11,21 @@ require "uri"
 require 'time'
 
 OUTPUT_DIR = "<%= $output_dir %>"
+METRICS_TYPE = "<%= $metrics_type %>"
 
 HOSTS = [
 <% $hosts.each |$host| { -%>
   "<%= $host %>",
 <% } -%>
 ]
+PORT = "<%= $metrics_port %>"
 
 METRICS = [
-<% if versioncmp($::pe_server_version, '2017.1.0') < 0 { -%>
+<% if $metrics_type == 'puppetdb' { -%>
+  <% if versioncmp($::pe_server_version, '2017.1.0') < 0 { -%>
   { 'name' => 'amq_metrics',
     'url'  => 'org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' },
-<% } -%>
+  <% } -%>
   { 'name' => 'command_processing_time',
     'url'  => 'puppetlabs.puppetdb.mq:name=global.processing-time' },
   { 'name' => 'command_processed',
@@ -39,7 +44,7 @@ METRICS = [
     'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retried' },
   { 'name' => 'global_retry_counts',
     'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-counts' },
-<% if versioncmp($::pe_server_version, '2016.4.0') >= 0 { -%>
+  <% if versioncmp($::pe_server_version, '2016.4.0') >= 0 { -%>
   { 'name' => 'replace_catalog_retried',
     'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.9.retried' },
   { 'name' => 'replace_catalog_retry_counts',
@@ -52,6 +57,9 @@ METRICS = [
     'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retried' },
   { 'name' => 'store_reports_retry_counts',
     'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dstore+report.8.retry-counts' },
+  <% } -%>
+<% } -%>
+<% elsif $metrics_type == 'puppetserver' { -%>
 <% } -%>
 ]
 
@@ -79,21 +87,21 @@ HOSTS.each do |host|
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
 
-    host_url = "https://#{host}:8081"
+    host_url = "https://#{host}:#{PORT}"
 
     status_endpoint = "#{host_url}/status/v1/services?level=debug"
     status_output   = get_endpoint(status_endpoint)
-    dataset['servers'][hostkey] = {'puppetdb' => status_output}
+    dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
 
     METRICS.each do |metric|
       endpoint = "#{host_url}/metrics/v1/mbeans/#{metric['url']}"
-      dataset['servers'][hostkey]['puppetdb'][metric['name']] = get_endpoint(endpoint)
+      dataset['servers'][hostkey][METRICS_TYPE][metric['name']] = get_endpoint(endpoint)
     end
 
-    dataset['servers'][hostkey]['puppetdb']['error'] = $error_array
-    dataset['servers'][hostkey]['puppetdb']['error_count'] = $error_array.count
-    dataset['servers'][hostkey]['puppetdb']['api-query-start'] = timestamp.utc.iso8601
-    dataset['servers'][hostkey]['puppetdb']['api-query-duration'] = Time.now - timestamp
+    dataset['servers'][hostkey][METRICS_TYPE]['error'] = $error_array
+    dataset['servers'][hostkey][METRICS_TYPE]['error_count'] = $error_array.count
+    dataset['servers'][hostkey][METRICS_TYPE]['api-query-start'] = timestamp.utc.iso8601
+    dataset['servers'][hostkey][METRICS_TYPE]['api-query-duration'] = Time.now - timestamp
 
     Dir.chdir(OUTPUT_DIR) do
       Dir.mkdir(host) unless File.exist?(host)
