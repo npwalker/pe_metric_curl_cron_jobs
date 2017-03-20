@@ -17,10 +17,7 @@ HOSTS = [
 ]
 
 METRICS = [
-<% if versioncmp($::pe_server_version, '2017.1.0') >= 0 { -%>
-  { 'name' => 'command_queue_depth',
-    'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.depth' },
-<% } else { -%>
+<% if versioncmp($::pe_server_version, '2017.1.0') < 0 { -%>
   { 'name' => 'amq_metrics',
     'url'  => 'org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=puppetlabs.puppetdb.commands' },
 <% } -%>
@@ -81,16 +78,21 @@ HOSTS.each do |host|
     timestamp = Time.now
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
-    dataset['servers'][hostkey] = {'puppetdb' => {}}
-    dataset['servers'][hostkey]['puppetdb']['api-query-start'] = timestamp.utc.iso8601
+
+    host_url = "https://#{host}:8081"
+
+    status_endpoint = "#{host_url}/status/v1/services?level=debug"
+    status_output   = get_endpoint(status_endpoint)
+    dataset['servers'][hostkey] = {'puppetdb' => status_output}
 
     METRICS.each do |metric|
-      endpoint = "https://#{host}:8081/metrics/v1/mbeans/#{metric['url']}"
+      endpoint = "#{host_url}/metrics/v1/mbeans/#{metric['url']}"
       dataset['servers'][hostkey]['puppetdb'][metric['name']] = get_endpoint(endpoint)
     end
 
     dataset['servers'][hostkey]['puppetdb']['error'] = $error_array
     dataset['servers'][hostkey]['puppetdb']['error_count'] = $error_array.count
+    dataset['servers'][hostkey]['puppetdb']['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey]['puppetdb']['api-query-duration'] = Time.now - timestamp
 
     Dir.chdir(OUTPUT_DIR) do
