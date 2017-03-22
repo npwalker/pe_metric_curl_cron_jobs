@@ -7,6 +7,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   Array[String]             $hosts          = [ '127.0.0.1' ],
   String                    $cron_minute    = '*/5',
   Integer                   $retention_days = 3,
+  String                    $metric_script_template = 'tk_metrics.epp',
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -23,7 +24,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   file { $script_file_name :
     ensure  => $metric_ensure,
     mode    => '0744',
-    content => epp("pe_metric_curl_cron_jobs/metrics.epp", {
+    content => epp("pe_metric_curl_cron_jobs/${metric_script_template}", {
       'output_dir'    => $metrics_output_dir,
       'hosts'         => $hosts,
       'metrics_type'  => $metrics_type,
