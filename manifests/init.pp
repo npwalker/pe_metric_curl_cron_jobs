@@ -6,8 +6,10 @@ class pe_metric_curl_cron_jobs (
   String        $output_dir                    = '/opt/puppetlabs/pe_metric_curl_cron_jobs',
   String        $puppetserver_metrics_ensure   = pick($pe_metric_curl_cron_jobs::puppet_server_metrics_ensure, 'present'),
   Array[String] $puppetserver_hosts            = pick($pe_metric_curl_cron_jobs::puppet_server_hosts, [ '127.0.0.1' ]),
+  Integer       $puppetserver_port             = 8140,
   String        $puppetdb_metrics_ensure       = 'present',
   Array[String] $puppetdb_hosts                = [ '127.0.0.1' ],
+  Integer       $puppetdb_port                 = 8081,
 ) {
   $scripts_dir = "${output_dir}/scripts"
 
@@ -23,11 +25,13 @@ class pe_metric_curl_cron_jobs (
   pe_metric_curl_cron_jobs::pe_metric { 'puppetserver' :
     metric_ensure => $puppetserver_metrics_ensure,
     hosts         => $puppetserver_hosts,
+    metrics_port  => $puppetserver_port,
   }
 
   pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
     metric_ensure => $puppetdb_metrics_ensure,
     hosts         => $puppetdb_hosts,
+    metrics_port  => $puppetdb_port,
   }
 
   # DEPRECATION MECHANISMS
@@ -35,6 +39,7 @@ class pe_metric_curl_cron_jobs (
   # are cleaned up.
   pe_metric_curl_cron_jobs::pe_metric { 'puppet_server' :
     metric_ensure => 'absent',
+    metrics_port  => 8140,
   }
 
   # Emit deprecation warnings if necessary
