@@ -14,6 +14,7 @@ class pe_metric_curl_cron_jobs (
   Integer       $puppetdb_port                 = 8081,
   String        $activemq_metrics_ensure       = 'absent',
   Array[String] $activemq_hosts                = [ '127.0.0.1' ],
+  Integer       $activemq_port                 = 8161,
 ) {
   $scripts_dir = "${output_dir}/scripts"
 
@@ -43,6 +44,7 @@ class pe_metric_curl_cron_jobs (
   pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
     metric_ensure => $activemq_metrics_ensure,
     hosts         => $activemq_hosts,
+    metrics_port  => $activemq_port,
     metric_script_template => 'activemq_metrics.epp',
   }
 
