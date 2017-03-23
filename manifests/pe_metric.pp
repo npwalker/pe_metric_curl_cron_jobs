@@ -6,7 +6,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String                    $metrics_type   = $title,
   Array[String]             $hosts          = [ '127.0.0.1' ],
   String                    $cron_minute    = '*/5',
-  Integer                   $retention_days = 3,
+  Integer                   $retention_days = 90,
   String                    $metric_script_template = 'tk_metrics.epp',
 ) {
 
@@ -44,6 +44,13 @@ define pe_metric_curl_cron_jobs::pe_metric (
     user    => 'root',
     hour    => '2',
     command => "find '${metrics_output_dir}' -type f -mtime ${retention_days} -delete",
+  }
+
+  cron { "${metrics_type}_metrics_tar" :
+    ensure  => $metric_ensure,
+    user    => 'root',
+    hour    => '1',
+    command => "export DIR='${metrics_output_dir}' ; find \"\$DIR\" -type f \! -name \"*.bz2\" > \"\$DIR.tmp\" ; xargs -a \"\$DIR.tmp\" tar -jcf \"\$DIR/${metrics_type}-$(date +%Y%m%d).tar.bz2\" 2>/dev/null ; xargs -a \"\$DIR.tmp\" rm ; rm \"\$DIR.tmp\"",
   }
 
   #Cleanup old .sh scripts

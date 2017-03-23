@@ -5,7 +5,7 @@ class pe_metric_curl_cron_jobs (
   # CURRENT API =================================
   String        $output_dir                    = '/opt/puppetlabs/pe_metric_curl_cron_jobs',
   Integer       $collection_frequency          = 5,
-  Integer       $retention_days                = 3,
+  Integer       $retention_days                = 90,
   String        $puppetserver_metrics_ensure   = pick($pe_metric_curl_cron_jobs::puppet_server_metrics_ensure, 'present'),
   Array[String] $puppetserver_hosts            = pick($pe_metric_curl_cron_jobs::puppet_server_hosts, [ '127.0.0.1' ]),
   Integer       $puppetserver_port             = 8140,
