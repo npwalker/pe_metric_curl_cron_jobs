@@ -43,7 +43,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
     ensure  => $metric_ensure,
     user    => 'root',
     hour    => '2',
-    command => "find '${output_dir}' -type f -mtime ${retention_days} -delete",
+    command => "find '${metrics_output_dir}' -type f -mtime ${retention_days} -delete",
   }
 
   #Cleanup old .sh scripts
