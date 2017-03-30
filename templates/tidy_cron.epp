@@ -11,7 +11,8 @@ RETENTION_DAYS=<%= $retention_days %>;
 find "$DIR" -type f -mtime $RETENTION_DAYS -delete
 
 #compress files
-find "$DIR" -type f ! -name "*.bz2" > "$DIR.tmp";
+cd "$DIR"
+find . -type f ! -name "*.bz2" > "$DIR.tmp";
 xargs -a "$DIR.tmp" tar -jcf "$DIR/$METRICS_TYPE-$(date +%Y.%m.%d.%H.%M.%S).tar.bz2" 2>/dev/null;
 xargs -a "$DIR.tmp" rm ;
 rm "$DIR.tmp";
