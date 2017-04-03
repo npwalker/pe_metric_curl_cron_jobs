@@ -55,6 +55,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
     ensure  => $metric_ensure,
     user    => 'root',
     hour    => '2',
+    minute  => '0',
     command => $metrics_tidy_script_path
   }
 
