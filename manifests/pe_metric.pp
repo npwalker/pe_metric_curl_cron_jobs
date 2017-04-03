@@ -6,7 +6,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String                    $metrics_type   = $title,
   Array[String]             $hosts          = [ '127.0.0.1' ],
   String                    $cron_minute    = '*/5',
-  Integer                   $retention_days = 3,
+  Integer                   $retention_days = 90,
   String                    $metric_script_template = 'tk_metrics.epp',
 ) {
 
@@ -39,11 +39,24 @@ define pe_metric_curl_cron_jobs::pe_metric (
     minute  => $cron_minute,
   }
 
+  $metrics_tidy_script_path = "${scripts_dir}/${metrics_type}_metrics_tidy"
+
+  file { $metrics_tidy_script_path :
+    ensure  => $metric_ensure,
+    mode    => '0744',
+    content => epp('pe_metric_curl_cron_jobs/tidy_cron.epp',
+                   { 'metrics_output_dir' => $metrics_output_dir,
+                     'metrics_type'       => $metrics_type,
+                     'retention_days'     => $retention_days,
+                   }),
+  }
+
   cron { "${metrics_type}_metrics_tidy" :
     ensure  => $metric_ensure,
     user    => 'root',
     hour    => '2',
-    command => "find '${metrics_output_dir}' -type f -mtime ${retention_days} -delete",
+    minute  => '0',
+    command => $metrics_tidy_script_path
   }
 
   #Cleanup old .sh scripts
