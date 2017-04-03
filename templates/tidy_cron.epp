@@ -1,18 +1,28 @@
 <%- | String  $metrics_output_dir,
       String  $metrics_type,
       Integer $retention_days,
+      Array[String] $hosts,
 | -%>
 #!/bin/sh
 DIR='<%= $metrics_output_dir %>';
 METRICS_TYPE='<%= $metrics_type %>';
 RETENTION_DAYS=<%= $retention_days %>;
 
-#delete files past retention days
-find "$DIR" -type f -mtime $RETENTION_DAYS -delete
+function delete_past_retention () {
+  find "$DIR" -type f -mtime $RETENTION_DAYS -delete
+}
 
-#compress files
-cd "$DIR"
-find . -type f ! -name "*.bz2" > "$DIR.tmp";
-xargs -a "$DIR.tmp" tar -jcf "$DIR/$METRICS_TYPE-$(date +%Y.%m.%d.%H.%M.%S).tar.bz2" 2>/dev/null;
-xargs -a "$DIR.tmp" rm ;
-rm "$DIR.tmp";
+function compress_files () {
+  HOST=$1
+  HOST_DIR="$DIR/$HOST"
+  cd "$HOST_DIR"
+  find . -type f ! -name "*.bz2" > "$HOST_DIR.tmp";
+  xargs -a "$HOST_DIR.tmp" tar -jcf "$HOST_DIR/$METRICS_TYPE-$(date +%Y.%m.%d.%H.%M.%S).tar.bz2" 2>/dev/null;
+  xargs -a "$HOST_DIR.tmp" rm ;
+  rm "$HOST_DIR.tmp";
+}
+
+delete_past_retention
+<% $hosts.each | $host | { -%>
+compress_files '<%= $host %>'
+<% } -%>
