@@ -1,26 +1,121 @@
 Table of Contents
 =================
 
-  * [How to use](#how-to-use)
-    * [Monolithic Install](#monolithic-install)
-      * [Hiera data Example](#hiera-data-example)
-      * [Class Definition](#class-definition)
-    * [Split Install ( Running on the Master )](#split-install--running-on-the-master-)
-      * [Hiera data Example](#hiera-data-example-1)
-      * [Class Definition Example](#class-definition-example)
-    * [Monolithic With Compile Masters ( Running on the MoM )](#monolithic-with-compile-masters--running-on-the-mom-)
-      * [Hiera data Example](#hiera-data-example-2)
-      * [Class Definition Example](#class-definition-example-1)
-    * [Split With Compile Masters ( Running on the MoM )](#split-with-compile-masters--running-on-the-mom-)
-      * [Hiera data Example](#hiera-data-example-3)
-      * [Class Definition Example](#class-definition-example-2)
-    * [Running on PE 3\.8](#running-on-pe-38)
-    * [Temporary Install](#temporary-install)
-    * [Alternate Option for Multi\-node Metrics Collection](#alternate-option-for-multi-node-metrics-collection)
-  * [What do you get](#what-do-you-get)
-    * [Grepping for Metrics](#grepping-for-metrics)
-      * [Puppetserver](#puppetserver)
-      * [PuppetDB](#puppetdb)
+* [What do you get](#what-do-you-get)
+  * [Directory layout](#directory-layout)
+  * [Cron jobs](#cron-jobs)
+  * [Grepping for Metrics](#grepping-for-metrics)
+    * [Puppetserver](#puppetserver)
+    * [PuppetDB](#puppetdb)
+* [How to use](#how-to-use)
+  * [Monolithic Install](#monolithic-install)
+    * [Hiera data Example](#hiera-data-example)
+    * [Class Definition](#class-definition)
+  * [Split Install ( Running on the Master )](#split-install--running-on-the-master-)
+    * [Hiera data Example](#hiera-data-example-1)
+    * [Class Definition Example](#class-definition-example)
+  * [Monolithic With Compile Masters ( Running on the MoM )](#monolithic-with-compile-masters--running-on-the-mom-)
+    * [Hiera data Example](#hiera-data-example-2)
+    * [Class Definition Example](#class-definition-example-1)
+  * [Split With Compile Masters ( Running on the MoM )](#split-with-compile-masters--running-on-the-mom-)
+    * [Hiera data Example](#hiera-data-example-3)
+    * [Class Definition Example](#class-definition-example-2)
+  * [Running on PE 3\.8](#running-on-pe-38)
+  * [Temporary Install](#temporary-install)
+  * [Alternate Option for Multi\-node Metrics Collection](#alternate-option-for-multi-node-metrics-collection)
+
+# What do you get
+
+By default, the module tracks the metrics coming from the status endpoint on Puppet Server and PuppetDB as well as a curated set of metrics from PuppetDB.
+
+## Directory layout
+
+You have a new directory `/opt/puppetlabs/pe_metric_curl_cron_jobs` that has one directory per component  (Puppet Server, PuppetDB, or ActiveMQ).  Each component has one directory per host that metrics are gathered from.  Each host directory contains one JSON file collected every 5 minutes by default.  Once per day the metrics for each component are compressed for every host and saved in the root of that component's directory.
+
+Here's an example:
+
+~~~
+/opt/puppetlabs/pe_metric_curl_cron_jobs/puppetserver
+├── 127.0.0.1
+│   ├── 20170404T020001Z.json
+│   ├── ...
+│   ├── 20170404T170501Z.json
+│   └── 20170404T171001Z.json
+└── puppetserver-2017.04.04.02.00.01.tar.bz2
+/opt/puppetlabs/pe_metric_curl_cron_jobs/puppetdb
+└── 127.0.0.1
+│   ├── 20170404T020001Z.json
+│   ├── ...
+│   ├── 20170404T170501Z.json
+│   ├── 20170404T171001Z.json
+└── puppetdb-2017.04.04.02.00.01.tar.bz2
+~~~
+
+## Cron jobs
+
+Each component has two cron jobs created for it.
+
+- A cron job to gather the metrics
+  - Runs every 5 minutes
+- A cron job to delete metrics past the rentention_days and compress metrics
+  - Runs daily at 2AM
+
+Example:
+
+~~~
+crontab -l
+...
+# Puppet Name: puppetserver_metrics_collection
+*/5 * * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppetserver_metrics
+# Puppet Name: puppetserver_metrics_tidy
+0 2 * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppetserver_metrics_tidy
+~~~
+
+## Grepping for Metrics
+
+You can get useful information with a grep like the one below run from inside of the directory containing the metrics files.  Since the metrics are compressed every night you can only grep metrics for the current day.  If you'd like to grep over a longer period of time you should decompress the compressed tarballs into `/tmp` and investigate further.
+
+~~~
+cd /opt/puppetlabs/pe_metric_curl_cron_jobs
+grep <metric_name> <component_name>/127.0.0.1/*.json
+~~~
+
+### Puppetserver
+
+Example output:
+
+~~~
+grep average-free-jrubies puppetserver/127.0.0.1/*.json
+puppetserver/127.0.0.1/20170404T170501Z.json:                "average-free-jrubies": 0.9950009285369501,
+puppetserver/127.0.0.1/20170404T171001Z.json:                "average-free-jrubies": 0.9999444653324225,
+puppetserver/127.0.0.1/20170404T171502Z.json:                "average-free-jrubies": 0.9999993830655706,
+~~~
+
+### PuppetDB
+
+Example output:
+
+~~~
+grep queue_depth puppetdb/127.0.0.1/*.json
+puppetdb/127.0.0.1/20170404T170501Z.json:            "queue_depth": 0,
+puppetdb/127.0.0.1/20170404T171001Z.json:            "queue_depth": 0,
+puppetdb/127.0.0.1/20170404T171502Z.json:            "queue_depth": 0,
+~~~
+
+PE 2016.5 and below:
+
+~~~
+grep Cursor puppetdb/127.0.0.1/*.json
+puppetdb/127.0.0.1/20170404T171001Z.json:          "CursorMemoryUsage": 0,
+puppetdb/127.0.0.1/20170404T171001Z.json:          "CursorFull": false,
+puppetdb/127.0.0.1/20170404T171001Z.json:          "CursorPercentUsage": 0,
+puppetdb/127.0.0.1/20170404T171502Z.json:          "CursorMemoryUsage": 0,
+puppetdb/127.0.0.1/20170404T171502Z.json:          "CursorFull": false,
+puppetdb/127.0.0.1/20170404T171502Z.json:          "CursorPercentUsage": 0,
+puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorMemoryUsage": 0,
+puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorFull": false,
+puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorPercentUsage": 0,
+~~~
 
 # How to use
 
@@ -145,93 +240,3 @@ for some reason you can't reach out across a network segment or some other reaso
 When you classify a compile master you would set `$puppetdb_metrics_ensure` to `absent`.
 
 When you classify a PuppetDB node you would set `$puppetserver_metrics_ensure` to `absent`.
-
-# What do you get
-
-By default the module tracks the metrics coming from the status endpoint on Puppetserver and various curated metrics from PuppetDB.
-
-A new directory `/opt/puppetlabs/pe_metric_curl_cron_jobs` that looks like:
-
-~~~
-/opt/puppetlabs/pe_metric_curl_cron_jobs/
-├── puppetdb
-│   └── 127.0.0.1
-│       ├── 20170314T205501Z.json
-│       ├── 20170314T205510Z.json
-│       └── 20170314T210001Z.json
-├── puppetserver
-│   └── 127.0.0.1
-│       ├── 20170314T205001Z.json
-│       ├── 20170314T205501Z.json
-│       └── 20170314T210001Z.json
-└── scripts
-    ├── puppetdb_metrics
-    └── puppetserver_metrics
-~~~
-
-New cronjobs:
-
-~~~
-crontab -l
-...
-# Puppet Name: puppetserver_metrics_collection
-*/5 * * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppetserver_metrics
-# Puppet Name: puppetserver_metrics_tidy
-* 2 * * * find '/opt/puppetlabs/pe_metric_curl_cron_jobs' -type f -mtime 3 -delete
-# Puppet Name: puppetdb_metrics_collection
-*/5 * * * * /opt/puppetlabs/pe_metric_curl_cron_jobs/scripts/puppetdb_metrics
-# Puppet Name: puppetdb_metrics_tidy
-* 2 * * * find '/opt/puppetlabs/pe_metric_curl_cron_jobs' -type f -mtime 3 -delete
-~~~
-
-## Grepping for Metrics
-
-You can get useful information with a grep like the one below run from inside of the directory containing the metrics files.
-
-~~~
-grep <metric_name> <service_name>/127.0.0.1/*.json
-~~~
-
-### Puppetserver
-
-Example output:
-
-~~~
-grep average-free-jrubies puppetserver/127.0.0.1/*.json
-puppetserver/127.0.0.1/20170314T204501Z.json:                "average-free-jrubies": 0.9999535595280031,
-puppetserver/127.0.0.1/20170314T205001Z.json:                "average-free-jrubies": 0.995494318690345,
-puppetserver/127.0.0.1/20170314T205501Z.json:                "average-free-jrubies": 0.8035181730040821,
-puppetserver/127.0.0.1/20170314T210001Z.json:                "average-free-jrubies": 0.9978172841156308,
-~~~
-
-### PuppetDB
-
-Example output:
-
-~~~
-grep QueueSize puppetdb/127.0.0.1/*.json
-puppetdb/127.0.0.1/20170314T205501Z.json:          "QueueSize": 0,
-puppetdb/127.0.0.1/20170314T205510Z.json:          "QueueSize": 0,
-puppetdb/127.0.0.1/20170314T210001Z.json:          "QueueSize": 0,
-~~~
-
-~~~
-grep CursorMemoryUsage puppetdb/127.0.0.1/*.json
-puppetdb/127.0.0.1/20170314T205501Z.json:          "CursorMemoryUsage": 0,
-puppetdb/127.0.0.1/20170314T205510Z.json:          "CursorMemoryUsage": 0,
-puppetdb/127.0.0.1/20170314T210001Z.json:          "CursorMemoryUsage": 0,
-~~~
-
-~~~
-grep CursorFull puppetdb/127.0.0.1/*.json
-puppetdb/127.0.0.1/20170314T205501Z.json:          "CursorFull": false,
-puppetdb/127.0.0.1/20170314T205510Z.json:          "CursorFull": false,
-puppetdb/127.0.0.1/20170314T210001Z.json:          "CursorFull": false,
-~~~
-
-~~~
-grep CursorPercentUsage puppetdb/127.0.0.1/*.json
-puppetdb/127.0.0.1/20170314T205501Z.json:          "CursorPercentUsage": 0,
-puppetdb/127.0.0.1/20170314T205510Z.json:          "CursorPercentUsage": 0,
-puppetdb/127.0.0.1/20170314T210001Z.json:          "CursorPercentUsage": 0,
-~~~
