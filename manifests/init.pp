@@ -42,12 +42,7 @@ class pe_metric_curl_cron_jobs (
     metrics_port  => $orchestrator_port,
   }
 
-  pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
-    metric_ensure => $activemq_metrics_ensure,
-    hosts         => $activemq_hosts,
-    metrics_port  => $activemq_port,
-    metric_script_template => 'activemq_metrics.epp',
-  }
+  include pe_metric_curl_cron_jobs::activemq
 
   # Emit deprecation warnings if necessary
   if ($puppet_server_metrics_ensure != undef) {
