@@ -58,7 +58,7 @@ Each component has two cron jobs created for it.
 - A cron job to gather the metrics
   - Runs every 5 minutes
 - A cron job to delete metrics past the rentention_days and compress metrics
-  - Runs daily at 2AM
+  - Runs at randomly selected time between midnight and 3AM
 
 Example:
 
