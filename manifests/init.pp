@@ -25,22 +25,11 @@ class pe_metric_curl_cron_jobs (
     ensure => directory,
   }
 
-  Pe_metric_curl_cron_jobs::Pe_metric {
-    output_dir     => $output_dir,
-    scripts_dir    => $scripts_dir,
-    cron_minute    => "*/${collection_frequency}",
-    retention_days => $retention_days,
-  }
-
   include pe_metric_curl_cron_jobs::puppetserver
 
   include pe_metric_curl_cron_jobs::puppetdb
 
-  pe_metric_curl_cron_jobs::pe_metric { 'orchestrator' :
-    metric_ensure => $orchestrator_metrics_ensure,
-    hosts         => $orchestrator_hosts,
-    metrics_port  => $orchestrator_port,
-  }
+  include pe_metric_curl_cron_jobs::orchestrator
 
   include pe_metric_curl_cron_jobs::activemq
 
