@@ -62,8 +62,9 @@ class pe_metric_curl_cron_jobs::puppetdb (
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dstore+report.${numbers['reports']}.retry-counts" },
   ]
 
-  $additional_metrics = versioncmp($::pe_server_version, '2017.1.0') ? {
-    -1      => $activemq_metrics + $base_metrics + $version_specific_metrics,
+  $additional_metrics = $::pe_server_version ? {
+    /^2015./ => $activemq_metrics,
+    /^2016./ => $activemq_metrics + $base_metrics + $version_specific_metrics,
     default => $base_metrics + $version_specific_metrics,
   }
 
