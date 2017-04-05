@@ -21,8 +21,11 @@ HOSTS = [
 ]
 PORT = "<%= $metrics_port %>"
 
-METRICS = <%= $additional_metrics %>
-
+METRICS = [ <% $additional_metrics.each | $metric | { %>
+  { 'name' => '<%= $metric['name'] %>',
+    'url' => '<%= $metric['url'] %>' },
+<%- } -%>
+]
 $error_array = []
 
 def get_endpoint(url)
