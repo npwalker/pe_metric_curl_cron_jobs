@@ -12,6 +12,9 @@ class pe_metric_curl_cron_jobs (
   String        $puppetdb_metrics_ensure       = 'present',
   Array[String] $puppetdb_hosts                = [ '127.0.0.1' ],
   Integer       $puppetdb_port                 = 8081,
+  String        $orchestrator_metrics_ensure   = 'present',
+  Array[String] $orchestrator_hosts            = [ '127.0.0.1' ],
+  Integer       $orchestrator_port             = 8143,
   String        $activemq_metrics_ensure       = 'absent',
   Array[String] $activemq_hosts                = [ '127.0.0.1' ],
   Integer       $activemq_port                 = 8161,
@@ -39,6 +42,12 @@ class pe_metric_curl_cron_jobs (
     metric_ensure => $puppetdb_metrics_ensure,
     hosts         => $puppetdb_hosts,
     metrics_port  => $puppetdb_port,
+  }
+
+  pe_metric_curl_cron_jobs::pe_metric { 'orchestrator' :
+    metric_ensure => $orchestrator_metrics_ensure,
+    hosts         => $orchestrator_hosts,
+    metrics_port  => $orchestrator_port,
   }
 
   pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
