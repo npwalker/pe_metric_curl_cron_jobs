@@ -32,11 +32,7 @@ class pe_metric_curl_cron_jobs (
     retention_days => $retention_days,
   }
 
-  pe_metric_curl_cron_jobs::pe_metric { 'puppetserver' :
-    metric_ensure => $puppetserver_metrics_ensure,
-    hosts         => $puppetserver_hosts,
-    metrics_port  => $puppetserver_port,
-  }
+  include pe_metric_curl_cron_jobs::puppetserver
 
   pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
     metric_ensure => $puppetdb_metrics_ensure,
@@ -55,14 +51,6 @@ class pe_metric_curl_cron_jobs (
     hosts         => $activemq_hosts,
     metrics_port  => $activemq_port,
     metric_script_template => 'activemq_metrics.epp',
-  }
-
-  # DEPRECATION MECHANISMS
-  # Ensure remanants of cron jobs and files from older versions of this module
-  # are cleaned up.
-  pe_metric_curl_cron_jobs::pe_metric { 'puppet_server' :
-    metric_ensure => 'absent',
-    metrics_port  => 8140,
   }
 
   # Emit deprecation warnings if necessary
