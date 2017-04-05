@@ -34,11 +34,7 @@ class pe_metric_curl_cron_jobs (
 
   include pe_metric_curl_cron_jobs::puppetserver
 
-  pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
-    metric_ensure => $puppetdb_metrics_ensure,
-    hosts         => $puppetdb_hosts,
-    metrics_port  => $puppetdb_port,
-  }
+  include pe_metric_curl_cron_jobs::puppetdb
 
   pe_metric_curl_cron_jobs::pe_metric { 'orchestrator' :
     metric_ensure => $orchestrator_metrics_ensure,
