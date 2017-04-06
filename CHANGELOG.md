@@ -1,3 +1,9 @@
+# Z Release 3.0.1
+
+## Bug Fixes:
+ - Stagger compression of files between midnight and 3AM to prevent a CPU spike
+   - [PR #22](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/22)
+
 # Major Release 3.0.0
 
 ## Changes

@@ -1,6 +1,6 @@
 {
   "name": "npwalker/pe_metric_curl_cron_jobs",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "npwalker",
   "summary": "A Puppet module for gathering metrics from PE components",
   "license": "Apache-2.0",
