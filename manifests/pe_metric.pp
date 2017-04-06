@@ -54,8 +54,8 @@ define pe_metric_curl_cron_jobs::pe_metric (
   cron { "${metrics_type}_metrics_tidy" :
     ensure  => $metric_ensure,
     user    => 'root',
-    hour    => '2',
-    minute  => '0',
+    hour    => fqdn_rand(3,  $metrics_type ),
+    minute  => (5 * fqdn_rand(11, $metrics_type )),
     command => $metrics_tidy_script_path
   }
 
