@@ -62,10 +62,37 @@ class pe_metric_curl_cron_jobs::puppetdb (
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dstore+report.${numbers['reports']}.retry-counts" },
   ]
 
+  $connection_pool_metrics = [
+    { 'name' => 'PDBReadPool_pool_ActiveConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBReadPool.pool.ActiveConnections' },
+    { 'name' => 'PDBReadPool_pool_IdleConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBReadPool.pool.IdleConnections' },
+    { 'name' => 'PDBReadPool_pool_PendingConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBReadPool.pool.PendingConnections' },
+    { 'name' => 'PDBReadPool_pool_TotalConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBReadPool.pool.TotalConnections' },
+    { 'name' => 'PDBReadPool_pool_Usage',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBReadPool.pool.Usage' },
+    { 'name' => 'PDBReadPool_pool_Wait',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBReadPool.pool.Wait' },
+    { 'name' => 'PDBWritePool_pool_ActiveConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBWritePool.pool.ActiveConnections' },
+    { 'name' => 'PDBWritePool_pool_IdleConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBWritePool.pool.IdleConnections' },
+    { 'name' => 'PDBWritePool_pool_PendingConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBWritePool.pool.PendingConnections' },
+    { 'name' => 'PDBWritePool_pool_TotalConnections',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBWritePool.pool.TotalConnections' },
+    { 'name' => 'PDBWritePool_pool_Usage',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBWritePool.pool.Usage' },
+    { 'name' => 'PDBWritePool_pool_Wait',
+      'url'  => 'puppetlabs.puppetdb.database%3Aname%3DPDBWritePool.pool.Wait' },
+  ]
+
   $additional_metrics = $::pe_server_version ? {
     /^2015./ => $activemq_metrics,
-    /^2016./ => $activemq_metrics + $base_metrics + $version_specific_metrics,
-    default => $base_metrics + $version_specific_metrics,
+    /^2016./ => $activemq_metrics + $base_metrics + $connection_pool_metrics + $version_specific_metrics,
+    default => $base_metrics + $connection_pool_metrics+ $version_specific_metrics,
   }
 
   pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
