@@ -12,6 +12,9 @@ class pe_metric_curl_cron_jobs (
   String        $puppetdb_metrics_ensure       = 'present',
   Array[String] $puppetdb_hosts                = [ '127.0.0.1' ],
   Integer       $puppetdb_port                 = 8081,
+  String        $orchestrator_metrics_ensure   = 'present',
+  Array[String] $orchestrator_hosts            = [ '127.0.0.1' ],
+  Integer       $orchestrator_port             = 8143,
   String        $activemq_metrics_ensure       = 'absent',
   Array[String] $activemq_hosts                = [ '127.0.0.1' ],
   Integer       $activemq_port                 = 8161,
@@ -22,39 +25,13 @@ class pe_metric_curl_cron_jobs (
     ensure => directory,
   }
 
-  Pe_metric_curl_cron_jobs::Pe_metric {
-    output_dir     => $output_dir,
-    scripts_dir    => $scripts_dir,
-    cron_minute    => "*/${collection_frequency}",
-    retention_days => $retention_days,
-  }
+  include pe_metric_curl_cron_jobs::puppetserver
 
-  pe_metric_curl_cron_jobs::pe_metric { 'puppetserver' :
-    metric_ensure => $puppetserver_metrics_ensure,
-    hosts         => $puppetserver_hosts,
-    metrics_port  => $puppetserver_port,
-  }
+  include pe_metric_curl_cron_jobs::puppetdb
 
-  pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
-    metric_ensure => $puppetdb_metrics_ensure,
-    hosts         => $puppetdb_hosts,
-    metrics_port  => $puppetdb_port,
-  }
+  include pe_metric_curl_cron_jobs::orchestrator
 
-  pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
-    metric_ensure => $activemq_metrics_ensure,
-    hosts         => $activemq_hosts,
-    metrics_port  => $activemq_port,
-    metric_script_template => 'activemq_metrics.epp',
-  }
-
-  # DEPRECATION MECHANISMS
-  # Ensure remanants of cron jobs and files from older versions of this module
-  # are cleaned up.
-  pe_metric_curl_cron_jobs::pe_metric { 'puppet_server' :
-    metric_ensure => 'absent',
-    metrics_port  => 8140,
-  }
+  include pe_metric_curl_cron_jobs::activemq
 
   # Emit deprecation warnings if necessary
   if ($puppet_server_metrics_ensure != undef) {

@@ -8,6 +8,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String                    $cron_minute    = '*/5',
   Integer                   $retention_days = 90,
   String                    $metric_script_template = 'tk_metrics.epp',
+  Array[Hash]               $additional_metrics     = [],
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -29,6 +30,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
       'hosts'         => $hosts,
       'metrics_type'  => $metrics_type,
       'metrics_port'  => $metrics_port,
+      'additional_metrics' => $additional_metrics,
     }),
   }
 

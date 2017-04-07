@@ -2,6 +2,7 @@
       Array[String] $hosts,
       String        $metrics_type,
       Integer       $metrics_port,
+      Array[Hash]   $additional_metrics,
 | -%>
 #!/opt/puppetlabs/puppet/bin/ruby
 
