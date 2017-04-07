@@ -18,10 +18,28 @@ class pe_metric_curl_cron_jobs::puppetdb (
   ]
 
   $base_metrics = [
-    { 'name' => 'command_processing_time',
-      'url'  => 'puppetlabs.puppetdb.mq:name=global.processing-time' },
-    { 'name' => 'command_processed',
-      'url'  => 'puppetlabs.puppetdb.mq:name=global.processed' },
+    { 'name' => 'global_command-parse-time',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.command-parse-time' },
+    { 'name' => 'global_discarded',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.discarded' },
+    { 'name' => 'global_fatal',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.fatal' },
+    { 'name' => 'global_generate-retry-message-time',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.generate-retry-message-time' },
+    { 'name' => 'global_message-persistence-time',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.message-persistence-time' },
+    { 'name' => 'global_retried',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retried' },
+    { 'name' => 'global_retry-counts',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-counts' },
+    { 'name' => 'global_retry-persistence-time',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-persistence-time' },
+    { 'name' => 'global_seen',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.seen' },
+    { 'name' => 'global_processed',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.processed' },
+    { 'name' => 'global_processing-time',
+      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.processing-time' },
     { 'name' => 'catalog_hash_miss',
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time' },
     { 'name' => 'catalog_hash_match',
@@ -32,10 +50,6 @@ class pe_metric_curl_cron_jobs::puppetdb (
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dreplace-facts-time' },
     { 'name' => 'store_report_time',
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dstore-report-time' },
-    { 'name' => 'global_retried',
-      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retried' },
-    { 'name' => 'global_retry_counts',
-      'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.retry-counts' },
   ]
 
   $numbers = $::pe_server_version ? {
