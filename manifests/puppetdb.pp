@@ -99,17 +99,17 @@ class pe_metric_curl_cron_jobs::puppetdb (
   }
 
   $version_specific_metrics = [
-    { 'name' => 'replace_catalog_retried',
+    { 'name' => 'mq_replace_catalog_retried',
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.${numbers['catalogs']}.retried" },
-    { 'name' => 'replace_catalog_retry_counts',
+    { 'name' => 'mq_replace_catalog_retry-counts',
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dreplace+catalog.${numbers['catalogs']}.retry-counts" },
-    { 'name' => 'replace_facts_retried',
+    { 'name' => 'mq_replace_facts_retried',
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.${numbers['facts']}.retried" },
-    { 'name' => 'replace_facts_retry_counts',
+    { 'name' => 'mq_replace_facts_retry-counts',
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dreplace+facts.${numbers['facts']}.retry-counts" },
-    { 'name' => 'store_report_retried',
+    { 'name' => 'mq_store_report_retried',
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dstore+report.${numbers['reports']}.retried" },
-    { 'name' => 'store_reports_retry_counts',
+    { 'name' => 'mq_store_reports_retry-counts',
       'url'  => "puppetlabs.puppetdb.mq%3Aname%3Dstore+report.${numbers['reports']}.retry-counts" },
   ]
 
