@@ -1,3 +1,26 @@
+# Major Release 4.0.0
+
+This is a major release because some of the PuppetDB metrics are renamed.
+For most users this update is only additive, however, if you are post processing
+the output of the module then you may need to update to the new names of the metrics.
+
+## Changes
+ - Rename some PuppetDB metrics
+   - command_processing_time is now global_processing_time
+   - command_processed is now global_processed
+   - replace_catalog_time is now storage_replace-catalog-time
+   - replace_facts_time is now storage_replace-facts-time
+   - store_report_time is now storage_store-report-time
+   - *\_retry and *\_retry-counts metrics are renamed to include mq\_ at the front
+
+## Improvements
+ - We now collect the output of the status endpoint for orchestrator
+ - We now collect HakariCP connection pooling metrics for PuppetDB
+ - We now collect the global metrics for PuppetDB
+ - We now collect the storage metrics for PuppetDB
+ - Each component now has its own class to allow customizing parameters per
+  component
+
 # Z Release 3.0.1
 
 ## Bug Fixes:
