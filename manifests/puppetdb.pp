@@ -40,16 +40,53 @@ class pe_metric_curl_cron_jobs::puppetdb (
       'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.processed' },
     { 'name' => 'global_processing-time',
       'url'  => 'puppetlabs.puppetdb.mq%3Aname%3Dglobal.processing-time' },
-    { 'name' => 'catalog_hash_miss',
-      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time' },
-    { 'name' => 'catalog_hash_match',
+  ]
+
+  $storage_metrics = [
+    { 'name' => 'storage_add-edges',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dadd-edges' },
+    { 'name' => 'storage_add-resources',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dadd-resources' },
+    { 'name' => 'storage_catalog-hash',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash' },
+    { 'name' => 'storage_catalog-hash-match-time',
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-match-time' },
-    { 'name' => 'replace_catalog_time',
+    { 'name' => 'storage_catalog-hash-miss-time',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-hash-miss-time' },
+    { 'name' => 'storage_gc-catalogs-time',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dgc-catalogs-time' },
+    { 'name' => 'storage_gc-environments-time',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dgc-environments-time' },
+    { 'name' => 'storage_gc-fact-paths',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dgc-fact-paths' },
+    { 'name' => 'storage_gc-params-time',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dgc-params-time' },
+    { 'name' => 'storage_gc-report-statuses',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dgc-report-statuses' },
+    { 'name' => 'storage_gc-time',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dgc-time' },
+    { 'name' => 'storage_new-catalog-time',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dnew-catalog-time' },
+    { 'name' => 'storage_new-catalogs',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dnew-catalogs' },
+    { 'name' => 'storage_replace-catalog-time',
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dreplace-catalog-time' },
-    { 'name' => 'replace_facts_time',
+    { 'name' => 'storage_replace-facts-time',
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dreplace-facts-time' },
-    { 'name' => 'store_report_time',
+    { 'name' => 'storage_resource-hashes',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dresource-hashes' },
+    { 'name' => 'storage_store-report-time',
       'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dstore-report-time' },
+  ]
+
+  #TODO: Track these on a less frequent cadence because they are slow to run
+  $storage_metrics_db_queries = [
+    { 'name' => 'storage_catalog-volitilty',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dcatalog-volitilty' },
+    { 'name' => 'storage_duplicate-catalogs',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dduplicate-catalogs' },
+    { 'name' => 'storage_duplicate-pct',
+      'url'  => 'puppetlabs.puppetdb.storage%3Aname%3Dduplicate-pct' },
   ]
 
   $numbers = $::pe_server_version ? {
@@ -105,8 +142,8 @@ class pe_metric_curl_cron_jobs::puppetdb (
 
   $additional_metrics = $::pe_server_version ? {
     /^2015./ => $activemq_metrics,
-    /^2016./ => $activemq_metrics + $base_metrics + $connection_pool_metrics + $version_specific_metrics,
-    default => $base_metrics + $connection_pool_metrics+ $version_specific_metrics,
+    /^2016./ => $activemq_metrics + $base_metrics + $storage_metrics + $connection_pool_metrics + $version_specific_metrics,
+    default  => $base_metrics + $storage_metrics + $connection_pool_metrics + $version_specific_metrics,
   }
 
   pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
