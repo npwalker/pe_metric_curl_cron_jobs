@@ -42,6 +42,25 @@ rescue Exception => e
     data = {}
 end
 
+def post_endpoint(url,post_data)
+  uri  = URI.parse(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.cert = OpenSSL::X509::Certificate.new(File.read('/etc/puppetlabs/puppet/ssl/certs/<%= $::clientcert %>.pem'))
+  http.key  = OpenSSL::PKey::RSA.new(File.read('/etc/puppetlabs/puppet/ssl/private_keys/<%= $::clientcert %>.pem'))
+  http.ca_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem'
+  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+  request.content_type = 'application/json'
+  request.body = post_data
+
+  data = JSON.parse(http.request(request).body)
+rescue Exception => e
+    $error_array << "#{e}"
+    data = {}
+end
+
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
 HOSTS.each do |host|
@@ -56,9 +75,20 @@ HOSTS.each do |host|
     status_output   = get_endpoint(status_endpoint)
     dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
 
+    post_data = []
+
     METRICS.each do |metric|
-      endpoint = "#{host_url}/metrics/v1/mbeans/#{metric['url']}"
-      dataset['servers'][hostkey][METRICS_TYPE][metric['name']] = get_endpoint(endpoint)
+      post_data << metric['url']
+    end
+
+    endpoint = "#{host_url}/metrics/v1/mbeans"
+    metrics_output = post_endpoint(endpoint, post_data.to_json)
+
+    METRICS.each_index do |index|
+      metric_name = METRICS[index]['name']
+      metric_data = metrics_output[index]
+
+      dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
     end
 
     dataset['servers'][hostkey][METRICS_TYPE]['error'] = $error_array
