@@ -29,20 +29,11 @@ end
 METRICS_TYPE = options[:metrics_type]
 config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
 
-OUTPUT_DIR = "<%= $output_dir %>"
+OUTPUT_DIR = config['output_dir']
+HOSTS      = config['hosts']
+PORT       = config['metrics_port']
+METRICS    = config['additional_metrics']
 
-HOSTS = [
-<% $hosts.each |$host| { -%>
-  "<%= $host %>",
-<% } -%>
-]
-PORT = "<%= $metrics_port %>"
-
-METRICS = [ <% $additional_metrics.each | $metric | { %>
-  { 'name' => '<%= $metric['name'] %>',
-    'url' => '<%= $metric['url'] %>' },
-<%- } -%>
-]
 $error_array = []
 
 def get_endpoint(url)
