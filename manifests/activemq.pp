@@ -55,7 +55,7 @@ class pe_metric_curl_cron_jobs::activemq (
   file { "${scripts_dir}/amq_metrics" :
     ensure  => present,
     mode    => '0744',
-    content => epp("pe_metric_curl_cron_jobs/activemq_metrics.epp"),
+    source  => 'puppet:///modules/pe_metric_curl_cron_jobs/amq_metrics',
   }
 
   pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
