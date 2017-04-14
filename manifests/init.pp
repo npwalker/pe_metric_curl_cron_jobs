@@ -25,6 +25,12 @@ class pe_metric_curl_cron_jobs (
     ensure => directory,
   }
 
+  file { "${scripts_dir}/tk_metrics" :
+    ensure  => present,
+    mode    => '0744',
+    content => epp("pe_metric_curl_cron_jobs/tk_metrics.epp"),
+  }
+
   include pe_metric_curl_cron_jobs::puppetserver
 
   include pe_metric_curl_cron_jobs::puppetdb

@@ -7,8 +7,8 @@ define pe_metric_curl_cron_jobs::pe_metric (
   Array[String]             $hosts          = [ '127.0.0.1' ],
   String                    $cron_minute    = '*/5',
   Integer                   $retention_days = 90,
-  String                    $metric_script_template = 'tk_metrics.epp',
-  Array[Hash]               $additional_metrics     = [],
+  String                    $metric_script_file = 'tk_metrics',
+  Array[Hash]               $additional_metrics = [],
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -35,13 +35,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
     content => $config_hash.pe_metric_curl_cron_jobs::to_yaml(),
   }
 
-  $script_file_name = "${scripts_dir}/${metrics_type}_metrics"
-
-  file { $script_file_name :
-    ensure  => $metric_ensure,
-    mode    => '0744',
-    content => epp("pe_metric_curl_cron_jobs/${metric_script_template}"),
-  }
+  $script_file_name = "${scripts_dir}/${metric_script_file}"
 
   cron { "${metrics_type}_metrics_collection" :
     ensure  => $metric_ensure,
@@ -70,9 +64,13 @@ define pe_metric_curl_cron_jobs::pe_metric (
     command => $metrics_tidy_script_path
   }
 
-  #Cleanup old .sh scripts
-  $old_script_file_name = "${scripts_dir}/${metrics_type}_metrics.sh"
-  file { $old_script_file_name :
+  #Cleanup old scripts
+  $old_script_file_names = [
+    "${scripts_dir}/${metrics_type}_metrics.sh",
+    "${scripts_dir}/${metrics_type}_metrics"
+  ]
+
+  file { $old_script_file_names :
     ensure  => absent,
   }
 }
