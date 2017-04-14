@@ -10,9 +10,18 @@ require "net/https"
 require "json"
 require "uri"
 require 'time'
+require 'optparse'
+
+METRICS_TYPE = "<%= $metrics_type %>"
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{METRICS_TYPE}_metrics [options]"
+
+  opts.on('-p', '--print', 'Print to stdout') { |v| options[:print] = true }
+end.parse!
 
 OUTPUT_DIR = "<%= $output_dir %>"
-METRICS_TYPE = "<%= $metrics_type %>"
 
 HOSTS = [
 <% $hosts.each |$host| { -%>
@@ -66,11 +75,16 @@ HOSTS.each do |host|
     dataset['servers'][hostkey][METRICS_TYPE]['api-query-start'] = timestamp.utc.iso8601
     dataset['servers'][hostkey][METRICS_TYPE]['api-query-duration'] = Time.now - timestamp
 
+    json_dataset = JSON.pretty_generate(dataset)
+
     Dir.chdir(OUTPUT_DIR) do
       Dir.mkdir(host) unless File.exist?(host)
       File.open(File.join(host, filename), 'w') do |file|
-        file.write(JSON.pretty_generate(dataset))
+        file.write(json_dataset)
       end
+    end
+    if options[:print] == true then
+      STDOUT.write(json_dataset)
     end
   end
 end
