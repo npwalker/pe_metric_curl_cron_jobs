@@ -20,6 +20,20 @@ define pe_metric_curl_cron_jobs::pe_metric (
     },
   }
 
+  $config_hash = {
+    'output_dir'         => $metrics_output_dir,
+    'hosts'              => $hosts,
+    'metrics_type'       => $metrics_type,
+    'metrics_port'       => $metrics_port,
+    'additional_metrics' => $additional_metrics,
+  }
+
+  file { "${scripts_dir}/${metrics_type}_config.yaml" :
+    ensure  => $metric_ensure,
+    mode    => '0644',
+    content => $config_hash.pe_metric_curl_cron_jobs::to_yaml(),
+  }
+
   $script_file_name = "${scripts_dir}/${metrics_type}_metrics"
 
   file { $script_file_name :
