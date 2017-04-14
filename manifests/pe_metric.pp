@@ -40,13 +40,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   file { $script_file_name :
     ensure  => $metric_ensure,
     mode    => '0744',
-    content => epp("pe_metric_curl_cron_jobs/${metric_script_template}", {
-      'output_dir'    => $metrics_output_dir,
-      'hosts'         => $hosts,
-      'metrics_type'  => $metrics_type,
-      'metrics_port'  => $metrics_port,
-      'additional_metrics' => $additional_metrics,
-    }),
+    content => epp("pe_metric_curl_cron_jobs/${metric_script_template}"),
   }
 
   cron { "${metrics_type}_metrics_collection" :
