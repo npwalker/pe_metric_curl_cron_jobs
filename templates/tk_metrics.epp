@@ -77,18 +77,20 @@ HOSTS.each do |host|
 
     post_data = []
 
-    METRICS.each do |metric|
-      post_data << metric['url']
-    end
+    unless METRICS.empty? then
+      METRICS.each do |metric|
+        post_data << metric['url']
+      end
 
-    endpoint = "#{host_url}/metrics/v1/mbeans"
-    metrics_output = post_endpoint(endpoint, post_data.to_json)
+      endpoint = "#{host_url}/metrics/v1/mbeans"
+      metrics_output = post_endpoint(endpoint, post_data.to_json)
 
-    METRICS.each_index do |index|
-      metric_name = METRICS[index]['name']
-      metric_data = metrics_output[index]
+      METRICS.each_index do |index|
+        metric_name = METRICS[index]['name']
+        metric_data = metrics_output[index]
 
-      dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
+        dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
+      end
     end
 
     dataset['servers'][hostkey][METRICS_TYPE]['error'] = $error_array
