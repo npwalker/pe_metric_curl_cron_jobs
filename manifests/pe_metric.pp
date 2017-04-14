@@ -50,7 +50,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   cron { "${metrics_type}_metrics_collection" :
     ensure  => $metric_ensure,
-    command => $script_file_name,
+    command => "${script_file_name} --metrics_type ${metrics_type}",
     user    => 'root',
     minute  => $cron_minute,
   }
