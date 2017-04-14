@@ -33,6 +33,7 @@ OUTPUT_DIR = config['output_dir']
 HOSTS      = config['hosts']
 PORT       = config['metrics_port']
 METRICS    = config['additional_metrics']
+CLIENTCERT = config['clientcert']
 
 $error_array = []
 
@@ -40,8 +41,8 @@ def get_endpoint(url)
   uri  = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
-  http.cert = OpenSSL::X509::Certificate.new(File.read('/etc/puppetlabs/puppet/ssl/certs/<%= $::clientcert %>.pem'))
-  http.key  = OpenSSL::PKey::RSA.new(File.read('/etc/puppetlabs/puppet/ssl/private_keys/<%= $::clientcert %>.pem'))
+  http.cert = OpenSSL::X509::Certificate.new(File.read("/etc/puppetlabs/puppet/ssl/certs/#{CLIENTCERT}.pem"))
+  http.key  = OpenSSL::PKey::RSA.new(File.read("/etc/puppetlabs/puppet/ssl/private_keys/#{CLIENTCERT}.pem"))
   http.ca_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem'
   http.verify_mode = OpenSSL::SSL::VERIFY_NONE
   data = JSON.parse(http.get(uri.request_uri).body)
@@ -54,8 +55,8 @@ def post_endpoint(url,post_data)
   uri  = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
-  http.cert = OpenSSL::X509::Certificate.new(File.read('/etc/puppetlabs/puppet/ssl/certs/<%= $::clientcert %>.pem'))
-  http.key  = OpenSSL::PKey::RSA.new(File.read('/etc/puppetlabs/puppet/ssl/private_keys/<%= $::clientcert %>.pem'))
+  http.cert = OpenSSL::X509::Certificate.new(File.read("/etc/puppetlabs/puppet/ssl/certs/#{CLIENTCERT}.pem"))
+  http.key  = OpenSSL::PKey::RSA.new(File.read("/etc/puppetlabs/puppet/ssl/private_keys/#{CLIENTCERT}.pem"))
   http.ca_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem'
   http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 

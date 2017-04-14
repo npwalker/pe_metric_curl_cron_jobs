@@ -26,6 +26,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
     'metrics_type'       => $metrics_type,
     'metrics_port'       => $metrics_port,
     'additional_metrics' => $additional_metrics,
+    'clientcert'         => $::clientcert,
   }
 
   file { "${scripts_dir}/${metrics_type}_config.yaml" :
