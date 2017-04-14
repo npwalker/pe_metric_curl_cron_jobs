@@ -11,24 +11,29 @@ require "json"
 require "uri"
 require 'time'
 require 'optparse'
-
-METRICS_TYPE = "<%= $metrics_type %>"
+require 'yaml'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: #{METRICS_TYPE}_metrics [options]"
+  opts.banner = "Usage: tk_metrics [options]"
 
   opts.on('-p', '--print', 'Print to stdout') { |v| options[:print] = true }
+  opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
 end.parse!
 
-OUTPUT_DIR = "<%= $output_dir %>"
+if options[:metrics_type].nil? then
+  STDERR.puts '--metrics_type (-m) is a required argument'
+  exit 1
+end
 
-HOSTS = [
-<% $hosts.each |$host| { -%>
-  "<%= $host %>",
-<% } -%>
-]
-PORT = "<%= $metrics_port %>"
+METRICS_TYPE = options[:metrics_type]
+config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
+
+OUTPUT_DIR = config['output_dir']
+HOSTS      = config['hosts']
+PORT       = config['metrics_port']
+METRICS    = config['additional_metrics']
+CLIENTCERT = config['clientcert']
 
 POST_DATA = '
   [
