@@ -1,9 +1,3 @@
-<%- | String        $output_dir,
-      Array[String] $hosts,
-      String        $metrics_type,
-      Integer       $metrics_port,
-      Array[Hash]   $additional_metrics,
-| -%>
 #!/opt/puppetlabs/puppet/bin/ruby
 
 require "net/https"
@@ -11,64 +5,31 @@ require "json"
 require "uri"
 require 'time'
 require 'optparse'
-
-METRICS_TYPE = "<%= $metrics_type %>"
+require 'yaml'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: #{METRICS_TYPE}_metrics [options]"
+  opts.banner = "Usage: tk_metrics [options]"
 
   opts.on('-p', '--print', 'Print to stdout') { |v| options[:print] = true }
+  opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
 end.parse!
 
-OUTPUT_DIR = "<%= $output_dir %>"
+if options[:metrics_type].nil? then
+  STDERR.puts '--metrics_type (-m) is a required argument'
+  exit 1
+end
 
-HOSTS = [
-<% $hosts.each |$host| { -%>
-  "<%= $host %>",
-<% } -%>
-]
-PORT = "<%= $metrics_port %>"
+METRICS_TYPE = options[:metrics_type]
+config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
 
-POST_DATA = '
-  [
-    {
-      "type": "read",
-      "mbean": "java.lang:type=Memory",
-      "attribute": "HeapMemoryUsage,NonHeapMemoryUsage"
-    },
-    {
-      "type": "read",
-      "mbean": "java.lang:name=*,type=GarbageCollector",
-      "attribute": "CollectionCount"
-    },
-    {
-      "type": "read",
-      "mbean": "java.lang:type=Runtime",
-      "attribute": "Uptime"
-    },
-    {
-      "type": "read",
-      "mbean": "java.lang:type=OperatingSystem",
-      "attribute": "OpenFileDescriptorCount,MaxFileDescriptorCount"
-    },
-    {
-      "type": "read",
-      "mbean": "org.apache.activemq:brokerName=*,type=Broker",
-      "attribute": "MemoryLimit,MemoryPercentUsage,CurrentConnectionsCount"
-    },
-    {
-      "type": "read",
-      "mbean": "org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=mcollective.*",
-      "attribute": "AverageBlockedTime,AverageEnqueueTime,AverageMessageSize,ConsumerCount,DequeueCount,DispatchCount,EnqueueCount,ExpiredCount,ForwardCount,InFlightCount,ProducerCount,QueueSize",
-    },
-    {
-      "type": "read",
-      "mbean": "org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=mcollective.*.agent",
-      "attribute": "AverageBlockedTime,AverageEnqueueTime,AverageMessageSize,ConsumerCount,DequeueCount,DispatchCount,EnqueueCount,ExpiredCount,ForwardCount,InFlightCount,ProducerCount,QueueSize",
-    },
-  ]
-'
+OUTPUT_DIR = config['output_dir']
+HOSTS      = config['hosts']
+PORT       = config['metrics_port']
+METRICS    = config['additional_metrics']
+CLIENTCERT = config['clientcert']
+
+POST_DATA = METRICS.to_json
 
 def recurse_merge!(a,b)
   a.merge!(b) do |_,aa,bb|
