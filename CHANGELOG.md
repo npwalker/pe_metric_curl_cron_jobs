@@ -1,3 +1,10 @@
+# Minor Release 4.2.0
+
+## Improvements
+ - Add a `--no-file` command line argument to the metrics scripts
+   - This allows for integrations to optionally not write metrics to a file
+   - [PR #27](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/27)
+
 # Minor Release 4.1.0
 
 ## Improvements
@@ -7,7 +14,7 @@
    - This allows for integrations with other tools that can read the output from stdout.
    - [PR #24](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/24)
  - Move script configuration into a YAML file
-   - Allow the metrics scripts to be stored as static files instead of templates 
+   - Allow the metrics scripts to be stored as static files instead of templates
    - [PR #25](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/25)
 
 # Major Release 4.0.0
