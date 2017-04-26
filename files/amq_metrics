@@ -9,7 +9,7 @@ require 'yaml'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: tk_metrics [options]"
+  opts.banner = "Usage: amq_metrics [options]"
 
   opts.on('-p', '--print', 'Print to stdout') { |v| options[:print] = true }
   opts.on('-f', '--[no-]file', 'Store output to a file') { |v| options[:file] = v }
