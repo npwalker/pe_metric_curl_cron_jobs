@@ -13,6 +13,7 @@ OptionParser.new do |opts|
 
   opts.on('-p', '--print', 'Print to stdout') { |v| options[:print] = true }
   opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
+  opts.on('-o [DIR]', '--output-dir [DIR]', 'Directory to save output to') { |o| options[:output_dir] = o }
 end.parse!
 
 if options[:metrics_type].nil? then
@@ -23,7 +24,7 @@ end
 METRICS_TYPE = options[:metrics_type]
 config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
 
-OUTPUT_DIR = config['output_dir']
+OUTPUT_DIR = options[:output_dir]
 HOSTS      = config['hosts']
 PORT       = config['metrics_port']
 METRICS    = config['additional_metrics']
@@ -103,10 +104,12 @@ HOSTS.each do |host|
 
     json_dataset = JSON.pretty_generate(dataset)
 
-    Dir.chdir(OUTPUT_DIR) do
-      Dir.mkdir(host) unless File.exist?(host)
-      File.open(File.join(host, filename), 'w') do |file|
-        file.write(json_dataset)
+    unless OUTPUT_DIR.nil? then
+      Dir.chdir(OUTPUT_DIR) do
+        Dir.mkdir(host) unless File.exist?(host)
+        File.open(File.join(host, filename), 'w') do |file|
+          file.write(json_dataset)
+        end
       end
     end
     if options[:print] == true then
