@@ -21,7 +21,6 @@ define pe_metric_curl_cron_jobs::pe_metric (
   }
 
   $config_hash = {
-    'output_dir'         => $metrics_output_dir,
     'hosts'              => $hosts,
     'metrics_type'       => $metrics_type,
     'metrics_port'       => $metrics_port,
@@ -39,7 +38,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   cron { "${metrics_type}_metrics_collection" :
     ensure  => $metric_ensure,
-    command => "${script_file_name} --metrics_type ${metrics_type}",
+    command => "${script_file_name} --metrics_type ${metrics_type} --output-dir ${metrics_output_dir}",
     user    => 'root',
     minute  => $cron_minute,
   }
