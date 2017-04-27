@@ -11,7 +11,7 @@ options = {}
 OptionParser.new do |opts|
   opts.banner = "Usage: tk_metrics [options]"
 
-  opts.on('-p', '--print', 'Print to stdout') { |v| options[:print] = true }
+  opts.on('-p', '--[no-]print', 'Print to stdout') { |p| options[:print] = p }
   opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
   opts.on('-o [DIR]', '--output-dir [DIR]', 'Directory to save output to') { |o| options[:output_dir] = o }
 end.parse!
@@ -112,7 +112,7 @@ HOSTS.each do |host|
         end
       end
     end
-    if options[:print] == true then
+    if options[:print] != false then
       STDOUT.write(json_dataset)
     end
   end
