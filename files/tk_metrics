@@ -29,6 +29,7 @@ HOSTS      = config['hosts']
 PORT       = config['metrics_port']
 METRICS    = config['additional_metrics']
 CLIENTCERT = config['clientcert']
+PE_VERSION = config['pe_version']
 
 $error_array = []
 
@@ -82,18 +83,25 @@ HOSTS.each do |host|
     post_data = []
 
     unless METRICS.empty? then
-      METRICS.each do |metric|
-        post_data << metric['url']
-      end
+      if Gem::Version.new(PE_VERSION) < Gem::Version.new('2016.2.0') then
+        METRICS.each do |metric|
+          endpoint = "#{host_url}/metrics/v1/mbeans/#{metric['url']}"
+          dataset['servers'][hostkey][METRICS_TYPE][metric['name']] = get_endpoint(endpoint)
+        end
+      else
+        METRICS.each do |metric|
+          post_data << metric['url']
+        end
 
-      endpoint = "#{host_url}/metrics/v1/mbeans"
-      metrics_output = post_endpoint(endpoint, post_data.to_json)
+        endpoint = "#{host_url}/metrics/v1/mbeans"
+        metrics_output = post_endpoint(endpoint, post_data.to_json)
 
-      METRICS.each_index do |index|
-        metric_name = METRICS[index]['name']
-        metric_data = metrics_output[index]
+        METRICS.each_index do |index|
+          metric_name = METRICS[index]['name']
+          metric_data = metrics_output[index]
 
-        dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
+          dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
+        end
       end
     end
 
