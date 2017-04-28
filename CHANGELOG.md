@@ -1,3 +1,13 @@
+# Minor Release 4.2.0
+
+## Improvements
+ - Allow not saving a metrics file
+   - Add a `--output-dir` CLI argument to metrics scripts which tells the script
+   where to save metrics output to.
+   - If `--output-dir` is not specified then no file is saved
+ - Metrics scripts print to STDOUT by default
+   - Use `--no-print` to silence output to STDOUT
+
 # Minor Release 4.1.0
 
 ## Improvements
@@ -7,7 +17,7 @@
    - This allows for integrations with other tools that can read the output from stdout.
    - [PR #24](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/24)
  - Move script configuration into a YAML file
-   - Allow the metrics scripts to be stored as static files instead of templates 
+   - Allow the metrics scripts to be stored as static files instead of templates
    - [PR #25](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/25)
 
 # Major Release 4.0.0
