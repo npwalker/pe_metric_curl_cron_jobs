@@ -29,6 +29,7 @@ HOSTS      = config['hosts']
 PORT       = config['metrics_port']
 METRICS    = config['additional_metrics']
 CLIENTCERT = config['clientcert']
+PE_VERSION = config['pe_version']
 
 POST_DATA = METRICS.to_json
 
