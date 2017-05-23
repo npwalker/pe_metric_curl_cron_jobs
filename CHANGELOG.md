@@ -1,3 +1,9 @@
+# Z Release 4.2.1
+
+## Bug Fixes:
+ - PE versions < 2016.2 now GET each metric individually instead of using a POST
+   - [PR #30](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/30)
+
 # Minor Release 4.2.0
 
 ## Improvements
