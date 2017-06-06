@@ -14,6 +14,7 @@ OptionParser.new do |opts|
   opts.on('-p', '--[no-]print', 'Print to stdout') { |p| options[:print] = p }
   opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
   opts.on('-o [DIR]', '--output-dir [DIR]', 'Directory to save output to') { |o| options[:output_dir] = o }
+  opts.on('--metrics_port [PORT]', 'The port the metrics service runs on') { |port| options[:metrics_port] = port }
 end.parse!
 
 if options[:metrics_type].nil? then
@@ -26,7 +27,7 @@ config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{ME
 
 OUTPUT_DIR = options[:output_dir]
 HOSTS      = config['hosts']
-PORT       = config['metrics_port']
+PORT       = options[:metrics_port] || config['metrics_port']
 METRICS    = config['additional_metrics']
 CLIENTCERT = config['clientcert']
 PE_VERSION = config['pe_version']
