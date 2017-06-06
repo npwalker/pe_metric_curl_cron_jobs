@@ -8,7 +8,7 @@ METRICS_TYPE='<%= $metrics_type %>';
 RETENTION_DAYS=<%= $retention_days %>;
 
 #delete files past retention days
-find "$DIR" -type f -mtime $RETENTION_DAYS -delete
+find "$DIR" -type f -ctime +$RETENTION_DAYS -delete
 
 #compress files
 cd "$DIR"
