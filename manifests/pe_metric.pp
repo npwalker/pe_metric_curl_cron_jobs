@@ -53,6 +53,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
                    { 'metrics_output_dir' => $metrics_output_dir,
                      'metrics_type'       => $metrics_type,
                      'retention_days'     => $retention_days,
+                     'hosts'              => $hosts, 
                    }),
   }
 
