@@ -1,3 +1,9 @@
+# Z Release 4.2.2
+
+## Bug Fixes:
+ - Tidy cron jobs would only delete metric files exactly retention_days away
+   - [PR #33](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/33)
+
 # Z Release 4.2.1
 
 ## Bug Fixes:
