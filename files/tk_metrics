@@ -25,9 +25,21 @@ end
 METRICS_TYPE = options[:metrics_type]
 config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
 
+def coalesce ( opt1, opt2, default=nil )
+  if opt1.nil? then
+    if opt2.nil? then
+      default
+    else
+      opt2
+    end
+  else
+    opt1
+  end
+end
+
 OUTPUT_DIR = options[:output_dir]
 HOSTS      = config['hosts']
-PORT       = options[:metrics_port] || config['metrics_port']
+PORT       = coalesce(options[:metrics_port], config['metrics_port'])
 METRICS    = config['additional_metrics']
 CLIENTCERT = config['clientcert']
 PE_VERSION = config['pe_version']
