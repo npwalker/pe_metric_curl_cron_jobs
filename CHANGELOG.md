@@ -1,3 +1,9 @@
+# Minor Release 4.3.0
+
+## Improvements
+  - No longer pass certificates to connect to metrics endpoint
+    - [PR #34](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/34)
+
 # Z Release 4.2.2
 
 ## Bug Fixes:
