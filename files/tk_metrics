@@ -15,6 +15,7 @@ OptionParser.new do |opts|
   opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
   opts.on('-o [DIR]', '--output-dir [DIR]', 'Directory to save output to') { |o| options[:output_dir] = o }
   opts.on('--metrics_port [PORT]', 'The port the metrics service runs on') { |port| options[:metrics_port] = port }
+  opts.on('--[no-]ssl', 'Whether or not to use SSL when gather metrics') { |ssl| options[:ssl] = ssl }
 end.parse!
 
 if options[:metrics_type].nil? then
@@ -43,20 +44,23 @@ PORT       = coalesce(options[:metrics_port], config['metrics_port'])
 METRICS    = config['additional_metrics']
 CLIENTCERT = config['clientcert']
 PE_VERSION = config['pe_version']
+SSL        = coalesce(options[:ssl], config['ssl'], true)
 
 $error_array = []
 
-def setup_connection(url)
+def setup_connection(url, ssl)
   uri  = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
-  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  if ssl then
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  end
 
   return http,uri
 end
 
-def get_endpoint(url)
-  http,uri = setup_connection(url)
+def get_endpoint(url,ssl)
+  http,uri = setup_connection(url,ssl)
 
   data = JSON.parse(http.get(uri.request_uri).body)
 rescue Exception => e
@@ -64,8 +68,8 @@ rescue Exception => e
     data = {}
 end
 
-def post_endpoint(url,post_data)
-  http,uri = setup_connection(url)
+def post_endpoint(url,post_data,ssl)
+  http,uri = setup_connection(url,ssl)
 
   request = Net::HTTP::Post.new(uri.request_uri)
   request.content_type = 'application/json'
@@ -77,15 +81,25 @@ rescue Exception => e
     data = {}
 end
 
-def get_status_endpoint(host, port)
-  host_url = "https://#{host}:#{port}"
+def generate_host_url(host, port, ssl)
+  if ssl then
+    protocol = 'https'
+  else
+    protocol = 'http'
+  end
 
-  status_endpoint = "#{host_url}/status/v1/services?level=debug"
-  status_output   = get_endpoint(status_endpoint)
+  host_url = "#{protocol}://#{host}:#{port}"
 end
 
-def bulk_retrieve_additional_metrics(host, port, metrics)
-  host_url = "https://#{host}:#{port}"
+def get_status_endpoint(host, port, ssl)
+  host_url = generate_host_url(host, port, ssl)
+
+  status_endpoint = "#{host_url}/status/v1/services?level=debug"
+  status_output   = get_endpoint(status_endpoint,ssl)
+end
+
+def bulk_retrieve_additional_metrics(host, port, metrics, ssl)
+  host_url = generate_host_url(host, port, ssl)
 
   post_data = []
   metrics.each do |metric|
@@ -93,7 +107,7 @@ def bulk_retrieve_additional_metrics(host, port, metrics)
   end
 
   endpoint = "#{host_url}/metrics/v1/mbeans"
-  metrics_output = post_endpoint(endpoint, post_data.to_json)
+  metrics_output = post_endpoint(endpoint, post_data.to_json, ssl)
   metrics_array = []
 
   metrics.each_index do |index|
@@ -107,24 +121,24 @@ def bulk_retrieve_additional_metrics(host, port, metrics)
   return metrics_array
 end
 
-def individually_retrieve_additional_metrics(host, port, metrics)
-  host_url = "https://#{host}:#{port}"
+def individually_retrieve_additional_metrics(host, port, metrics, ssl)
+  host_url = generate_host_url(host, port, ssl)
 
   metrics_array = []
   metrics.each do |metric|
     endpoint = URI.escape("#{host_url}/metrics/v1/mbeans/#{metric['url']}")
     metrics_array <<  { 'name' => metric['name'],
-                        'data' => get_endpoint(endpoint) }
+                        'data' => get_endpoint(endpoint, ssl) }
   end
 
   return metrics_array
 end
 
-def retrieve_additional_metrics(host,port,metrics,pe_version)
+def retrieve_additional_metrics(host,port,metrics,pe_version, ssl)
   if Gem::Version.new(pe_version) < Gem::Version.new('2016.2.0') then
-    metrics_array = individually_retrieve_additional_metrics(host, port, metrics)
+    metrics_array = individually_retrieve_additional_metrics(host, port, metrics, ssl)
   else
-    metrics_array = bulk_retrieve_additional_metrics(host, port, metrics)
+    metrics_array = bulk_retrieve_additional_metrics(host, port, metrics, ssl)
   end
 
   return metrics_array
@@ -138,11 +152,11 @@ HOSTS.each do |host|
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
 
-    status_output   = get_status_endpoint(host, PORT)
+    status_output   = get_status_endpoint(host, PORT, SSL)
     dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
 
     unless METRICS.empty? then
-      metrics_array = retrieve_additional_metrics(host, PORT, METRICS, PE_VERSION)
+      metrics_array = retrieve_additional_metrics(host, PORT, METRICS, PE_VERSION, SSL)
 
       metrics_array.each do |metric_hash|
         metric_name = metric_hash['name']
