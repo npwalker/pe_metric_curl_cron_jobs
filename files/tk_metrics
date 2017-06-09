@@ -64,6 +64,13 @@ rescue Exception => e
     data = {}
 end
 
+def get_status_endpoint(host, port)
+  host_url = "https://#{host}:#{port}"
+
+  status_endpoint = "#{host_url}/status/v1/services?level=debug"
+  status_output   = get_endpoint(status_endpoint)
+end
+
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
 HOSTS.each do |host|
@@ -74,8 +81,7 @@ HOSTS.each do |host|
 
     host_url = "https://#{host}:#{PORT}"
 
-    status_endpoint = "#{host_url}/status/v1/services?level=debug"
-    status_output   = get_endpoint(status_endpoint)
+    status_output   = get_status_endpoint(host, PORT)
     dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
 
     post_data = []
