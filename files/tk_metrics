@@ -33,11 +33,18 @@ PE_VERSION = config['pe_version']
 
 $error_array = []
 
-def get_endpoint(url)
+def setup_connection(url)
   uri  = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
   http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+  return http,uri
+end
+
+def get_endpoint(url)
+  http,uri = setup_connection(url)
+
   data = JSON.parse(http.get(uri.request_uri).body)
 rescue Exception => e
     $error_array << "#{e}"
@@ -45,10 +52,7 @@ rescue Exception => e
 end
 
 def post_endpoint(url,post_data)
-  uri  = URI.parse(url)
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
-  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  http,uri = setup_connection(url)
 
   request = Net::HTTP::Post.new(uri.request_uri)
   request.content_type = 'application/json'
