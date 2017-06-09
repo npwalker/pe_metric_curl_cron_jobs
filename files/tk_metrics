@@ -125,8 +125,6 @@ HOSTS.each do |host|
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
 
-    host_url = "https://#{host}:#{PORT}"
-
     status_output   = get_status_endpoint(host, PORT)
     dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
 
