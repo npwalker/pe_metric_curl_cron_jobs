@@ -123,22 +123,14 @@ HOSTS.each do |host|
     unless METRICS.empty? then
       if Gem::Version.new(PE_VERSION) < Gem::Version.new('2016.2.0') then
         metrics_array = individually_retrieve_additional_metrics(host, PORT, METRICS)
-
-        metrics_array.each do |metric_hash|
-          metric_name = metric_hash['name']
-          metric_data = metric_hash['data']
-
-          dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
-        end
       else
         metrics_array = bulk_retrieve_additional_metrics(host, PORT, METRICS)
+      end
+      metrics_array.each do |metric_hash|
+        metric_name = metric_hash['name']
+        metric_data = metric_hash['data']
 
-        metrics_array.each do |metric_hash|
-          metric_name = metric_hash['name']
-          metric_data = metric_hash['data']
-
-          dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
-        end
+        dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
       end
     end
 
