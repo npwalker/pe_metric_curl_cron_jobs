@@ -71,6 +71,29 @@ def get_status_endpoint(host, port)
   status_output   = get_endpoint(status_endpoint)
 end
 
+def bulk_retrieve_additional_metrics(host, port, metrics)
+  host_url = "https://#{host}:#{port}"
+
+  post_data = []
+  metrics.each do |metric|
+    post_data << metric['url']
+  end
+
+  endpoint = "#{host_url}/metrics/v1/mbeans"
+  metrics_output = post_endpoint(endpoint, post_data.to_json)
+  metrics_array = []
+
+  metrics.each_index do |index|
+    metric_name = metrics[index]['name']
+    metric_data = metrics_output[index]
+
+    metrics_array << { 'name' => metric_name,
+                       'data' => metric_data  }
+  end
+
+  return metrics_array
+end
+
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
 HOSTS.each do |host|
@@ -84,8 +107,6 @@ HOSTS.each do |host|
     status_output   = get_status_endpoint(host, PORT)
     dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
 
-    post_data = []
-
     unless METRICS.empty? then
       if Gem::Version.new(PE_VERSION) < Gem::Version.new('2016.2.0') then
         METRICS.each do |metric|
@@ -93,16 +114,11 @@ HOSTS.each do |host|
           dataset['servers'][hostkey][METRICS_TYPE][metric['name']] = get_endpoint(endpoint)
         end
       else
-        METRICS.each do |metric|
-          post_data << metric['url']
-        end
+        metrics_array = bulk_retrieve_additional_metrics(host, PORT, METRICS)
 
-        endpoint = "#{host_url}/metrics/v1/mbeans"
-        metrics_output = post_endpoint(endpoint, post_data.to_json)
-
-        METRICS.each_index do |index|
-          metric_name = METRICS[index]['name']
-          metric_data = metrics_output[index]
+        metrics_array.each do |metric_hash|
+          metric_name = metric_hash['name']
+          metric_data = metric_hash['data']
 
           dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
         end
