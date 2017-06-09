@@ -99,7 +99,7 @@ def individually_retrieve_additional_metrics(host, port, metrics)
 
   metrics_array = []
   metrics.each do |metric|
-    endpoint = "#{host_url}/metrics/v1/mbeans/#{metric['url']}"
+    endpoint = URI.escape("#{host_url}/metrics/v1/mbeans/#{metric['url']}")
     metrics_array <<  { 'name' => metric['name'],
                         'data' => get_endpoint(endpoint) }
   end
