@@ -9,6 +9,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   Integer                   $retention_days = 90,
   String                    $metric_script_file = 'tk_metrics',
   Array[Hash]               $additional_metrics = [],
+  Boolean                   $ssl                = true,
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -27,6 +28,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
     'additional_metrics' => $additional_metrics,
     'clientcert'         => $::clientcert,
     'pe_version'         => $facts['pe_server_version'],
+    'ssl'                => $ssl,
   }
 
   file { "${scripts_dir}/${metrics_type}_config.yaml" :

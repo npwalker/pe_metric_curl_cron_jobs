@@ -146,10 +146,22 @@ class pe_metric_curl_cron_jobs::puppetdb (
     default  => $base_metrics + $storage_metrics + $connection_pool_metrics + $version_specific_metrics,
   }
 
+  $_ssl = $hosts ? {
+    [ '127.0.0.1' ] => false,
+    default         => true,
+  }
+
+  if $port == 8081 and $_ssl == false {
+    $_port = 8080
+  } else {
+    $_port = $port
+  }
+
   pe_metric_curl_cron_jobs::pe_metric { 'puppetdb' :
     metric_ensure => $metrics_ensure,
     hosts         => $hosts,
-    metrics_port  => $port,
+    metrics_port       => $_port,
+    ssl                => $_ssl,
     additional_metrics => $additional_metrics,
   }
 }
