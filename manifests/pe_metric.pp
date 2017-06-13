@@ -25,7 +25,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
     'hosts'              => $hosts,
     'metrics-type'       => $metrics_type,
     'metrics-port'       => $metrics_port,
-    'metrics'            => $additional_metrics,
+    'additional-metrics' => $additional_metrics,
     'clientcert'         => $::clientcert,
     'pe-version'         => $facts['pe_server_version'],
     'ssl'                => $ssl,
