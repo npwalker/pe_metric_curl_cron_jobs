@@ -13,20 +13,20 @@ require 'yaml'
 
 # Define the list of mandatory options that must be specified on the CLI
 REQUIRED_FLAGS = {
-  metrics_type: { type: :string },
+  :"metrics-type" => { type: :string },
 }
 
 # Define the list of options that will be read from the config file, and which
 # may optionally be specified on the CLI.
 SETTINGS = {
-  output_dir:   { type: :string, default: false }, # false = disabled
-  hosts:        { type: :list },
-  metrics:      { type: :list },
-  metrics_port: { type: :string },
-  clientcert:   { type: :string },
-  pe_version:   { type: :string },
-  print:        { type: :boolean, default: true },
-  ssl:          { type: :boolean, default: true },
+  :"output-dir"   => { type: :string, default: false }, # false = disabled
+  :hosts          => { type: :list },
+  :metrics        => { type: :list },
+  :"metrics-port" => { type: :string },
+  :clientcert     => { type: :string },
+  :"pe-version"   => { type: :string },
+  :print          => { type: :boolean, default: true },
+  :ssl            => { type: :boolean, default: true },
 }
 
 config = { }
@@ -53,7 +53,7 @@ REQUIRED_FLAGS.each_key do |opt|
 end
 
 begin
-  file = File.join(File.dirname(File.expand_path(__FILE__)),"#{config[:metrics_type]}_config.yaml")
+  file = File.join(File.dirname(File.expand_path(__FILE__)),"#{config[:"metrics-type"]}_config.yaml")
   file_config = YAML.load_file(file)
 rescue Exception => e
   STDERR.puts "ERROR: unable to read configuration file from #{file}: #{e}"
@@ -179,29 +179,29 @@ config[:hosts].each do |host|
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
 
-    status_output   = get_status_endpoint(host, config[:metrics_port], config[:ssl])
-    dataset['servers'][hostkey] = {config[:metrics_type] => status_output}
+    status_output   = get_status_endpoint(host, config[:"metrics-port"], config[:ssl])
+    dataset['servers'][hostkey] = {config[:"metrics-type"] => status_output}
 
     unless config[:metrics].empty? then
-      metrics_array = retrieve_additional_metrics(host, config[:metrics_port], config[:metrics], config[:pe_version], config[:ssl])
+      metrics_array = retrieve_additional_metrics(host, config[:"metrics-port"], config[:metrics], config[:"pe-version"], config[:ssl])
 
       metrics_array.each do |metric_hash|
         metric_name = metric_hash['name']
         metric_data = metric_hash['data']
 
-        dataset['servers'][hostkey][config[:metrics_type]][metric_name] = metric_data
+        dataset['servers'][hostkey][config[:"metrics-type"]][metric_name] = metric_data
       end
     end
 
-    dataset['servers'][hostkey][config[:metrics_type]]['error'] = $error_array
-    dataset['servers'][hostkey][config[:metrics_type]]['error_count'] = $error_array.count
-    dataset['servers'][hostkey][config[:metrics_type]]['api-query-start'] = timestamp.utc.iso8601
-    dataset['servers'][hostkey][config[:metrics_type]]['api-query-duration'] = Time.now - timestamp
+    dataset['servers'][hostkey][config[:"metrics-type"]]['error'] = $error_array
+    dataset['servers'][hostkey][config[:"metrics-type"]]['error_count'] = $error_array.count
+    dataset['servers'][hostkey][config[:"metrics-type"]]['api-query-start'] = timestamp.utc.iso8601
+    dataset['servers'][hostkey][config[:"metrics-type"]]['api-query-duration'] = Time.now - timestamp
 
     json_dataset = JSON.pretty_generate(dataset)
 
-    unless config[:output_dir] == false then
-      Dir.chdir(config[:output_dir]) do
+    unless config[:"output-dir"] == false then
+      Dir.chdir(config[:"output-dir"]) do
         Dir.mkdir(host) unless File.exist?(host)
         File.open(File.join(host, filename), 'w') do |file|
           file.write(json_dataset)

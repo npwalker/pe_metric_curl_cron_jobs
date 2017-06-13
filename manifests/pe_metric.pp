@@ -23,11 +23,11 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   $config_hash = {
     'hosts'              => $hosts,
-    'metrics_type'       => $metrics_type,
-    'metrics_port'       => $metrics_port,
+    'metrics-type'       => $metrics_type,
+    'metrics-port'       => $metrics_port,
     'metrics'            => $additional_metrics,
     'clientcert'         => $::clientcert,
-    'pe_version'         => $facts['pe_server_version'],
+    'pe-version'         => $facts['pe_server_version'],
     'ssl'                => $ssl,
   }
 
