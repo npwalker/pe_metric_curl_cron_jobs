@@ -1,3 +1,10 @@
+# Minor Release 4.4.0
+
+## Improvements
+  - Allow connecting over http instead of https for PuppetDB
+    - [PR #37](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/37)
+    - In order to use pass `--no-ssl` and `--metrics_port` to the tk_metrics script
+
 # Minor Release 4.3.0
 
 ## Improvements
