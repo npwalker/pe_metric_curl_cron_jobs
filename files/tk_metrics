@@ -7,44 +7,71 @@ require 'time'
 require 'optparse'
 require 'yaml'
 
-options = {}
+#===========================================================================#
+# BUILD CONFIGURATION OPTIONS                                               #
+#===========================================================================#
+
+# Define the list of mandatory options that must be specified on the CLI
+REQUIRED_FLAGS = {
+  metrics_type: { type: :string },
+}
+
+# Define the list of options that will be read from the config file, and which
+# may optionally be specified on the CLI.
+SETTINGS = {
+  output_dir:   { type: :string, default: false }, # false = disabled
+  hosts:        { type: :list },
+  metrics:      { type: :list },
+  metrics_port: { type: :string },
+  clientcert:   { type: :string },
+  pe_version:   { type: :string },
+  print:        { type: :boolean, default: true },
+  ssl:          { type: :boolean, default: true },
+}
+
+config = { }
+
 OptionParser.new do |opts|
   opts.banner = "Usage: tk_metrics [options]"
 
-  opts.on('-p', '--[no-]print', 'Print to stdout') { |p| options[:print] = p }
-  opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
-  opts.on('-o [DIR]', '--output-dir [DIR]', 'Directory to save output to') { |o| options[:output_dir] = o }
-  opts.on('--metrics_port [PORT]', 'The port the metrics service runs on') { |port| options[:metrics_port] = port }
-  opts.on('--[no-]ssl', 'Whether or not to use SSL when gather metrics') { |ssl| options[:ssl] = ssl }
+  # Gather options
+  REQUIRED_FLAGS.merge(SETTINGS).each do |opt,attrs|
+    case attrs[:type]
+    when :string, nil
+      opts.on("--#{opt} ARG", '(no description)')  { |arg| config[opt] = arg }
+    when :boolean
+      opts.on("--[no-]#{opt}", '(no description)') { |arg| config[opt] = arg }
+    when :list
+      opts.on("--#{opt} ARG", '(no description)')  { |arg| config[opt] = arg.split(',') }
+    end
+  end
+
 end.parse!
 
-if options[:metrics_type].nil? then
-  STDERR.puts '--metrics_type (-m) is a required argument'
+REQUIRED_FLAGS.each_key do |opt|
+  !config[opt].nil? || raise("ERROR: Missing configuration option \"#{opt}\"")
+end
+
+begin
+  file = File.join(File.dirname(File.expand_path(__FILE__)),"#{config[:metrics_type]}_config.yaml")
+  file_config = YAML.load_file(file)
+rescue Exception => e
+  STDERR.puts "ERROR: unable to read configuration file from #{file}: #{e}"
   exit 1
 end
 
-METRICS_TYPE = options[:metrics_type]
-config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
-
-def coalesce ( opt1, opt2, default=nil )
-  if opt1.nil? then
-    if opt2.nil? then
-      default
-    else
-      opt2
-    end
-  else
-    opt1
-  end
+# For the options which MAY be read from a config file, retrieve those values
+# if they have not been specified during invocation. Values specified on the
+# command line are given precedence.
+SETTINGS.each do |opt,attrs|
+  possibilities = [config[opt], file_config[opt], attrs[:default]]
+  config[opt] = possibilities.find {|p| !p.nil? }
+  raise("ERROR: Missing configuration option \"#{opt}\"") if config[opt].nil?
 end
 
-OUTPUT_DIR = options[:output_dir]
-HOSTS      = config['hosts']
-PORT       = coalesce(options[:metrics_port], config['metrics_port'])
-METRICS    = config['additional_metrics']
-CLIENTCERT = config['clientcert']
-PE_VERSION = config['pe_version']
-SSL        = coalesce(options[:ssl], config['ssl'], true)
+#===========================================================================#
+# MAIN SCRIPT LOGIC                                                         #
+#===========================================================================#
 
 $error_array = []
 
@@ -146,42 +173,42 @@ end
 
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
-HOSTS.each do |host|
+config[:hosts].each do |host|
   begin
     timestamp = Time.now
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
 
-    status_output   = get_status_endpoint(host, PORT, SSL)
-    dataset['servers'][hostkey] = {METRICS_TYPE => status_output}
+    status_output   = get_status_endpoint(host, config[:metrics_port], config[:ssl])
+    dataset['servers'][hostkey] = {config[:metrics_type] => status_output}
 
-    unless METRICS.empty? then
-      metrics_array = retrieve_additional_metrics(host, PORT, METRICS, PE_VERSION, SSL)
+    unless config[:metrics].empty? then
+      metrics_array = retrieve_additional_metrics(host, config[:metrics_port], config[:metrics], config[:pe_version], config[:ssl])
 
       metrics_array.each do |metric_hash|
         metric_name = metric_hash['name']
         metric_data = metric_hash['data']
 
-        dataset['servers'][hostkey][METRICS_TYPE][metric_name] = metric_data
+        dataset['servers'][hostkey][config[:metrics_type]][metric_name] = metric_data
       end
     end
 
-    dataset['servers'][hostkey][METRICS_TYPE]['error'] = $error_array
-    dataset['servers'][hostkey][METRICS_TYPE]['error_count'] = $error_array.count
-    dataset['servers'][hostkey][METRICS_TYPE]['api-query-start'] = timestamp.utc.iso8601
-    dataset['servers'][hostkey][METRICS_TYPE]['api-query-duration'] = Time.now - timestamp
+    dataset['servers'][hostkey][config[:metrics_type]]['error'] = $error_array
+    dataset['servers'][hostkey][config[:metrics_type]]['error_count'] = $error_array.count
+    dataset['servers'][hostkey][config[:metrics_type]]['api-query-start'] = timestamp.utc.iso8601
+    dataset['servers'][hostkey][config[:metrics_type]]['api-query-duration'] = Time.now - timestamp
 
     json_dataset = JSON.pretty_generate(dataset)
 
-    unless OUTPUT_DIR.nil? then
-      Dir.chdir(OUTPUT_DIR) do
+    unless config[:output_dir] == false then
+      Dir.chdir(config[:output_dir]) do
         Dir.mkdir(host) unless File.exist?(host)
         File.open(File.join(host, filename), 'w') do |file|
           file.write(json_dataset)
         end
       end
     end
-    if options[:print] != false then
+    if config[:print] != false then
       STDOUT.write(json_dataset)
     end
   end
