@@ -1,3 +1,9 @@
+# Z Release 4.4.1
+
+## Bug Fixes:
+ - PuppetDB metrics could not be gathered by default in PE < 2016.4.0
+   - [PR #39](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/39)
+
 # Minor Release 4.4.0
 
 ## Improvements
