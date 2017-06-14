@@ -17,28 +17,31 @@ config = { }
 OptionParser.new do |parser|
   parser.banner = "Usage: tk_metrics [options]"
 
-  ident = lambda { |name,arg| config[name] = arg }
-  list = lambda { |name,arg| config[name] = arg.split(',') }
+  save_ident = lambda { |name,arg| config[name] = arg }
+  save_list  = lambda { |name,arg| config[name] = arg.split(',') }
 
-  option = lambda do |name,opt,desc,save,default=nil|
+  opt_bool  = lambda { |arg| "--[no-]#{arg}" }
+  opt_value = lambda { |arg| "--#{arg} ARG" }
+
+  option = lambda do |name,desc,fopt,fsave,default=nil|
     settings[name] = { default: default }
-    parser.on(opt, desc) do |arg|
-      save.call(name, arg)
+    parser.on(fopt.call(name.to_s), desc) do |arg|
+      fsave.call(name, arg)
     end
   end
 
   # Each possible configuration option is defined here
-  option.call(:"output-dir", '--output-dir ARG', 'Directory to save output to', ident, false)
-  option.call(:hosts, '--hosts ARG', 'Hosts to collect metrics from (comma-separated)', list, ['localhost'])
-  option.call(:"additional-metrics", '--additional-metrics ARG', 'Additional metrics to collect (comma-separated)', list, [])
-  option.call(:"metrics-port", '--metrics-port ARG', 'The port the metrics service runs on', ident)
-  option.call(:clientcert, '--clientcert ARG', 'Not used', ident)
-  option.call(:"pe-version", '--pe-version ARG', 'The version of PE in use', ident)
-  option.call(:print, '--[no-]print ARG', 'Print to stdout', ident, true)
-  option.call(:ssl, '--[no-]ssl ARG', 'Whether or not to use SSL when gather metrics', ident, true)
+  option.call(:"output-dir", 'Directory to save output to', opt_value, save_ident, false)
+  option.call(:hosts, 'Hosts to collect metrics from (comma-separated)', opt_value, save_list, ['localhost'])
+  option.call(:"additional-metrics", 'Additional metrics to collect (comma-separated)', opt_value, save_list, [])
+  option.call(:"metrics-port", 'The port the metrics service runs on', opt_value, save_ident)
+  option.call(:clientcert, 'Not used', opt_value, save_ident)
+  option.call(:"pe-version", 'The version of PE in use', opt_value, save_ident)
+  option.call(:print, 'Print to stdout', opt_bool, save_ident, true)
+  option.call(:ssl, 'Whether or not to use SSL when gather metrics', opt_bool, save_ident, true)
 
   # This one is special because it's required
-  option.call(:"metrics-type", '--metrics-type ARG', 'Type of metric to collect', ident)
+  option.call(:"metrics-type", 'Type of metric to collect', opt_value, save_ident)
 
   # Kinda pointless to include descriptions unless there's a help flag
   parser.on("-h", "--help", "Prints this help") { puts parser; exit }
