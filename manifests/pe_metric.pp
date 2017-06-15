@@ -31,7 +31,9 @@ define pe_metric_curl_cron_jobs::pe_metric (
     'ssl'                => $ssl,
   }
 
-  file { "${scripts_dir}/${metrics_type}_config.yaml" :
+  $config_file = "${scripts_dir}/${metrics_type}_config.yaml"
+
+  file { $config_file:
     ensure  => $metric_ensure,
     mode    => '0644',
     content => $config_hash.pe_metric_curl_cron_jobs::to_yaml(),
@@ -41,7 +43,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   cron { "${metrics_type}_metrics_collection" :
     ensure  => $metric_ensure,
-    command => "${script_file_name} --metrics_type ${metrics_type} --output-dir ${metrics_output_dir} --no-print",
+    command => "${script_file_name} --config ${config_file} --output-dir ${metrics_output_dir} --no-print",
     user    => 'root',
     minute  => $cron_minute,
   }

@@ -7,31 +7,70 @@ require 'time'
 require 'optparse'
 require 'yaml'
 
-options = {}
-OptionParser.new do |opts|
-  opts.banner = "Usage: amq_metrics [options]"
+#===========================================================================#
+# BUILD CONFIGURATION OPTIONS                                               #
+#===========================================================================#
 
-  opts.on('-p', '--[no-]print', 'Print to stdout') { |p| options[:print] = p }
-  opts.on('-m [TYPE]', '--metrics_type [TYPE]', 'Type of metric to collect') { |v| options[:metrics_type] = v }
-  opts.on('-o [DIR]', '--output-dir [DIR]', 'Directory to save output to') { |o| options[:output_dir] = o }
+settings = { }
+config = { }
+from_cli = { }
+from_file = { }
+
+OptionParser.new do |parser|
+  parser.banner = "Usage: tk_metrics [options]"
+
+  save_ident = lambda { |name,arg| from_cli[name] = arg }
+  save_list  = lambda { |name,arg| from_cli[name] = arg.split(',') }
+
+  opt_bool  = lambda { |arg| "--[no-]#{arg}" }
+  opt_value = lambda { |arg| "--#{arg} ARG" }
+
+  option = lambda do |name,desc,fopt,fsave,default=nil|
+    settings[name] = { default: default }
+    parser.on(fopt.call(name.to_s), desc) { |arg| fsave.call(name, arg) }
+  end
+
+  # Each possible configuration option is defined here
+  option.call(:config, 'Path to configuration file', opt_value, save_ident, false)
+  option.call(:"output-dir", 'Directory to save output to', opt_value, save_ident, false)
+  option.call(:hosts, 'Hosts to collect metrics from (comma-separated)', opt_value, save_list, ['localhost'])
+  option.call(:"additional-metrics", 'Additional metrics to collect (comma-separated)', opt_value, save_list, [])
+  option.call(:"metrics-port", 'The port the metrics service runs on', opt_value, save_ident)
+  option.call(:clientcert, 'Not used', opt_value, save_ident)
+  option.call(:"pe-version", 'The version of PE in use', opt_value, save_ident)
+  option.call(:print, 'Print to stdout', opt_bool, save_ident, true)
+  option.call(:ssl, 'Whether or not to use SSL when gather metrics', opt_bool, save_ident, true)
+  option.call(:"metrics-type", 'Type of metric to collect', opt_value, save_ident)
+
+  # Kinda pointless to include descriptions unless there's a help flag
+  parser.on("-h", "--help", "Prints this help") { puts parser; exit }
+
 end.parse!
 
-if options[:metrics_type].nil? then
-  STDERR.puts '--metrics_type (-m) is a required argument'
-  exit 1
+# If a configuration file has been specified, read additional configuration
+# from it.
+if from_cli[:config]
+  begin
+    from_file = YAML.load_file(from_cli[:config])
+  rescue Exception => e
+    STDERR.puts "ERROR: unable to read configuration from #{config[:config]}: #{e}"
+    exit 1
+  end
 end
 
-METRICS_TYPE = options[:metrics_type]
-config = YAML.load_file(File.join(File.dirname(File.expand_path(__FILE__)),"#{METRICS_TYPE}_config.yaml"))
+# For the options which MAY be read from a config file, retrieve those values
+# if they have not been specified during invocation. Values specified on the
+# command line are given precedence.
+settings.each do |opt,attrs|
+  possibilities = [from_cli[opt], from_file[opt.to_s], attrs[:default]]
+  if (config[opt] = possibilities.find {|p| !p.nil? }).nil?
+    raise("ERROR: Missing configuration option \"#{opt}\"")
+  end
+end
 
-OUTPUT_DIR = options[:output_dir]
-HOSTS      = config['hosts']
-PORT       = config['metrics_port']
-METRICS    = config['additional_metrics']
-CLIENTCERT = config['clientcert']
-PE_VERSION = config['pe_version']
-
-POST_DATA = METRICS.to_json
+#===========================================================================#
+# MAIN SCRIPT LOGIC                                                         #
+#===========================================================================#
 
 def recurse_merge!(a,b)
   a.merge!(b) do |_,aa,bb|
@@ -70,49 +109,50 @@ end
 
 filename = Time.now.utc.strftime('%Y%m%dT%H%M%SZ') + '.json'
 
-HOSTS.each do |host|
+config[:hosts].each do |host|
   begin
     timestamp = Time.now
     dataset = {'timestamp' => timestamp.utc.iso8601, 'servers' => {}}
     hostkey = host.gsub('.', '-')
-    dataset['servers'][hostkey] = {METRICS_TYPE => {}}
+    dataset['servers'][hostkey] = {config[:"metrics-type"] => {}}
 
-    host_url = "https://#{host}:#{PORT}/api/jolokia"
-    response = get_endpoint(host_url, POST_DATA)
+    host_url = "http://#{host}:#{config[:"metrics-port"]}/api/jolokia"
+    response = get_endpoint(host_url, config[:"additional-metrics"].to_json)
 
     JSON.parse(response.body).each do |element|
       case element['value']
       when Hash
         element['value'].each do |mbean,attributes|
           metrics = treeify(mbean, attributes)
-          recurse_merge!(dataset['servers'][hostkey][METRICS_TYPE], metrics)
+          recurse_merge!(dataset['servers'][hostkey][config[:"metrics-type"]], metrics)
         end
       else
         req = element['request']
         metrics = treeify(req['mbean'], { req['attribute'] => req['value'] })
-        recurse_merge!(dataset['servers'][hostkey][METRICS_TYPE], metrics)
+        recurse_merge!(dataset['servers'][hostkey][config[:"metrics-type"]], metrics)
       end
     end
 
-    dataset['servers'][hostkey][METRICS_TYPE]['error'] = $error_array
-    dataset['servers'][hostkey][METRICS_TYPE]['error_count'] = $error_array.count
-    dataset['servers'][hostkey][METRICS_TYPE]['api-query-start'] = timestamp.utc.iso8601
-    dataset['servers'][hostkey][METRICS_TYPE]['api-query-duration'] = Time.now - timestamp
+    dataset['servers'][hostkey][config[:"metrics-type"]]['error'] = $error_array
+    dataset['servers'][hostkey][config[:"metrics-type"]]['error_count'] = $error_array.count
+    dataset['servers'][hostkey][config[:"metrics-type"]]['api-query-start'] = timestamp.utc.iso8601
+    dataset['servers'][hostkey][config[:"metrics-type"]]['api-query-duration'] = Time.now - timestamp
 
     json_dataset = JSON.pretty_generate(dataset)
 
-    unless OUTPUT_DIR.nil? then
-      Dir.chdir(OUTPUT_DIR) do
+    if config[:"output-dir"] then
+      Dir.chdir(config[:"output-dir"]) do
         Dir.mkdir(host) unless File.exist?(host)
         File.open(File.join(host, filename), 'w') do |file|
           file.write(json_dataset)
         end
       end
     end
-    if options[:print] != false then
+    if config[:print] then
       STDOUT.write(json_dataset)
     end
   rescue Exception => e
     STDERR.puts "Error getting metrics for #{host}: #{e}"
+    STDERR.puts e.backtrace
   end
 end

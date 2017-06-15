@@ -47,27 +47,14 @@ OptionParser.new do |parser|
 
 end.parse!
 
-# This is to support legacy from the time when passing --metrics-type was what
-# determined the filename of the config file, rather than the --config option.
-metrics_type_file = if from_cli[:"metrics-type"]
-  scriptdir = File.dirname(File.expand_path(__FILE__))
-  legacyfile = "#{from_cli[:"metrics-type"]}_config.yaml"
-  File.join(scriptdir, legacyfile)
-end
-
 # If a configuration file has been specified, read additional configuration
-# from it. Some complexity exists due to support for metrics-type filename.
-config[:config] = from_cli[:config] || metrics_type_file
-if config[:config]
+# from it.
+if from_cli[:config]
   begin
-    from_file = YAML.load_file(config[:config])
+    from_file = YAML.load_file(from_cli[:config])
   rescue Exception => e
-    if from_cli[:config] # means we're not using a metrics-type filename
-      STDERR.puts "ERROR: unable to read configuration from #{config[:config]}: #{e}"
-      exit 1
-    else
-      STDERR.puts "WARN: unable to read configuration from #{config[:config]}: #{e}"
-    end
+    STDERR.puts "ERROR: unable to read configuration from #{config[:config]}: #{e}"
+    exit 1
   end
 end
 
@@ -76,8 +63,9 @@ end
 # command line are given precedence.
 settings.each do |opt,attrs|
   possibilities = [from_cli[opt], from_file[opt.to_s], attrs[:default]]
-  config[opt] = possibilities.find {|p| !p.nil? }
-  raise("ERROR: Missing configuration option \"#{opt}\"") if config[opt].nil?
+  if (config[opt] = possibilities.find {|p| !p.nil? }).nil?
+    raise("ERROR: Missing configuration option \"#{opt}\"")
+  end
 end
 
 #===========================================================================#
