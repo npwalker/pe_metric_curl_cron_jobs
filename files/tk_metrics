@@ -13,24 +13,25 @@ require 'yaml'
 
 settings = { }
 config = { }
+from_cli = { }
+from_file = { }
 
 OptionParser.new do |parser|
   parser.banner = "Usage: tk_metrics [options]"
 
-  save_ident = lambda { |name,arg| config[name] = arg }
-  save_list  = lambda { |name,arg| config[name] = arg.split(',') }
+  save_ident = lambda { |name,arg| from_cli[name] = arg }
+  save_list  = lambda { |name,arg| from_cli[name] = arg.split(',') }
 
   opt_bool  = lambda { |arg| "--[no-]#{arg}" }
   opt_value = lambda { |arg| "--#{arg} ARG" }
 
   option = lambda do |name,desc,fopt,fsave,default=nil|
     settings[name] = { default: default }
-    parser.on(fopt.call(name.to_s), desc) do |arg|
-      fsave.call(name, arg)
-    end
+    parser.on(fopt.call(name.to_s), desc) { |arg| fsave.call(name, arg) }
   end
 
   # Each possible configuration option is defined here
+  option.call(:config, 'Path to configuration file', opt_value, save_ident, false)
   option.call(:"output-dir", 'Directory to save output to', opt_value, save_ident, false)
   option.call(:hosts, 'Hosts to collect metrics from (comma-separated)', opt_value, save_list, ['localhost'])
   option.call(:"additional-metrics", 'Additional metrics to collect (comma-separated)', opt_value, save_list, [])
@@ -39,8 +40,6 @@ OptionParser.new do |parser|
   option.call(:"pe-version", 'The version of PE in use', opt_value, save_ident)
   option.call(:print, 'Print to stdout', opt_bool, save_ident, true)
   option.call(:ssl, 'Whether or not to use SSL when gather metrics', opt_bool, save_ident, true)
-
-  # This one is special because it's required
   option.call(:"metrics-type", 'Type of metric to collect', opt_value, save_ident)
 
   # Kinda pointless to include descriptions unless there's a help flag
@@ -48,21 +47,35 @@ OptionParser.new do |parser|
 
 end.parse!
 
-raise('ERROR: Missing configuration option "metrics-type"') if config[:"metrics-type"].nil?
+# This is to support legacy from the time when passing --metrics-type was what
+# determined the filename of the config file, rather than the --config option.
+metrics_type_file = if from_cli[:"metrics-type"]
+  scriptdir = File.dirname(File.expand_path(__FILE__))
+  legacyfile = "#{from_cli[:"metrics-type"]}_config.yaml"
+  File.join(scriptdir, legacyfile)
+end
 
-begin
-  file = File.join(File.dirname(File.expand_path(__FILE__)),"#{config[:"metrics-type"]}_config.yaml")
-  file_config = YAML.load_file(file)
-rescue Exception => e
-  STDERR.puts "ERROR: unable to read configuration file from #{file}: #{e}"
-  exit 1
+# If a configuration file has been specified, read additional configuration
+# from it. Some complexity exists due to support for metrics-type filename.
+config[:config] = from_cli[:config] || metrics_type_file
+if config[:config]
+  begin
+    from_file = YAML.load_file(config[:config])
+  rescue Exception => e
+    if from_cli[:config] # means we're not using a metrics-type filename
+      STDERR.puts "ERROR: unable to read configuration from #{config[:config]}: #{e}"
+      exit 1
+    else
+      STDERR.puts "WARN: unable to read configuration from #{config[:config]}: #{e}"
+    end
+  end
 end
 
 # For the options which MAY be read from a config file, retrieve those values
 # if they have not been specified during invocation. Values specified on the
 # command line are given precedence.
 settings.each do |opt,attrs|
-  possibilities = [config[opt], file_config[opt], attrs[:default]]
+  possibilities = [from_cli[opt], from_file[opt.to_s], attrs[:default]]
   config[opt] = possibilities.find {|p| !p.nil? }
   raise("ERROR: Missing configuration option \"#{opt}\"") if config[opt].nil?
 end
