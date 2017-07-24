@@ -18,6 +18,7 @@ class pe_metric_curl_cron_jobs (
   String        $activemq_metrics_ensure       = 'absent',
   Array[String] $activemq_hosts                = [ '127.0.0.1' ],
   Integer       $activemq_port                 = 8161,
+  Enum[present, absent] $cli_ensure            = 'present',
 ) {
   $scripts_dir = "${output_dir}/scripts"
 
@@ -29,6 +30,14 @@ class pe_metric_curl_cron_jobs (
     ensure  => present,
     mode    => '0744',
     source  => 'puppet:///modules/pe_metric_curl_cron_jobs/tk_metrics'
+  }
+
+  file { '/opt/puppetlabs/bin/puppet-metrics-collector':
+    ensure => $cli_ensure,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+    source => 'puppet:///modules/pe_metric_curl_cron_jobs/puppet-metrics-collector',
   }
 
   include pe_metric_curl_cron_jobs::puppetserver

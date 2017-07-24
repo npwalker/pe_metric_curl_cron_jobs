@@ -1,0 +1,15 @@
+#!/bin/bash
+
+[ "$1" = "create-tarball" ] || { echo >&2 "ERROR: Usage: $0 create-tarball"; exit 1; }
+
+timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
+tarball="puppet-metrics-${timestamp}.tar.gz"
+
+tar \
+  --exclude scripts \
+  --transform "s/pe_metric_curl_cron_jobs/puppet-metrics-${timestamp}/" \
+  -czf "${tarball}" \
+  -C /opt/puppetlabs \
+  pe_metric_curl_cron_jobs
+
+echo "Metrics data tarball created at: $(pwd)/${tarball}"
