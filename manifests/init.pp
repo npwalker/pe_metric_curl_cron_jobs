@@ -21,8 +21,9 @@ class pe_metric_curl_cron_jobs (
   Enum[present, absent] $cli_ensure            = 'present',
 ) {
   $scripts_dir = "${output_dir}/scripts"
+  $bin_dir = "${output_dir}/bin"
 
-  file { [ $output_dir, $scripts_dir ] :
+  file { [ $output_dir, $scripts_dir, $bin_dir] :
     ensure => directory,
   }
 
@@ -32,12 +33,22 @@ class pe_metric_curl_cron_jobs (
     source  => 'puppet:///modules/pe_metric_curl_cron_jobs/tk_metrics'
   }
 
-  file { '/opt/puppetlabs/bin/puppet-metrics-collector':
+  file { "${bin_dir}/puppet-metrics-collector":
     ensure => $cli_ensure,
     owner  => 'root',
     group  => 'root',
     mode   => '0755',
     source => 'puppet:///modules/pe_metric_curl_cron_jobs/puppet-metrics-collector',
+  }
+
+  $symlink_ensure = $cli_ensure ? {
+    'absent'  => 'absent',
+    'present' => 'symlink',
+  }
+
+  file { "/opt/puppetlabs/bin/puppet-metrics-collector":
+    ensure => $symlink_ensure,
+    target => "${bin_dir}/puppet-metrics-collector",
   }
 
   include pe_metric_curl_cron_jobs::puppetserver
