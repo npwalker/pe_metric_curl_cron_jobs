@@ -34,11 +34,13 @@ class pe_metric_curl_cron_jobs (
   }
 
   file { "${bin_dir}/puppet-metrics-collector":
-    ensure => $cli_ensure,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0755',
-    source => 'puppet:///modules/pe_metric_curl_cron_jobs/puppet-metrics-collector',
+    ensure  => $cli_ensure,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    content => epp('pe_metric_curl_cron_jobs/puppet-metrics-collector.epp', {
+      'output_dir' => $output_dir,
+    }),
   }
 
   $symlink_ensure = $cli_ensure ? {
