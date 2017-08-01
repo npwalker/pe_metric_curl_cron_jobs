@@ -31,10 +31,10 @@ OptionParser.new do |parser|
   end
 
   # Each possible configuration option is defined here
-  option.call(:config, 'Path to configuration file', opt_value, save_ident, false)
-  option.call(:"output-dir", 'Directory to save output to', opt_value, save_ident, false)
+  option.call(:config, 'Path to configuration file', opt_value, save_ident, :undef)
+  option.call(:"output-dir", 'Directory to save output to', opt_value, save_ident, :undef)
   option.call(:hosts, 'Hosts to collect metrics from (comma-separated)', opt_value, save_list, ['localhost'])
-  option.call(:"additional-metrics", 'Additional metrics to collect (comma-separated)', opt_value, save_list, [])
+  option.call(:"additional-metrics", 'Additional metrics to collect (comma-separated)', opt_value, save_list)
   option.call(:"metrics-port", 'The port the metrics service runs on', opt_value, save_ident)
   option.call(:clientcert, 'Not used', opt_value, save_ident)
   option.call(:"pe-version", 'The version of PE in use', opt_value, save_ident)
@@ -49,7 +49,7 @@ end.parse!
 
 # If a configuration file has been specified, read additional configuration
 # from it.
-if from_cli[:config]
+unless :undef == from_cli[:config]
   begin
     from_file = YAML.load_file(from_cli[:config])
   rescue Exception => e
@@ -140,7 +140,7 @@ config[:hosts].each do |host|
 
     json_dataset = JSON.pretty_generate(dataset)
 
-    if config[:"output-dir"] then
+    unless :undef == config[:"output-dir"]
       Dir.chdir(config[:"output-dir"]) do
         Dir.mkdir(host) unless File.exist?(host)
         File.open(File.join(host, filename), 'w') do |file|
@@ -148,7 +148,7 @@ config[:hosts].each do |host|
         end
       end
     end
-    if config[:print] then
+    if config[:print]
       STDOUT.write(json_dataset)
     end
   rescue Exception => e
