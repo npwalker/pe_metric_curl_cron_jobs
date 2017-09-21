@@ -19,6 +19,9 @@ define pe_metric_curl_cron_jobs::pe_metric (
       'present' => directory,
       'absent'  => absent,
     },
+    owner  => 'pe_metric_curl_cron_jobs',
+    group  => 'pe_metric_curl_cron_jobs',
+    mode   => '0755',
   }
 
   $config_hash = {
@@ -33,16 +36,24 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   file { "${scripts_dir}/${metrics_type}_config.yaml" :
     ensure  => $metric_ensure,
-    mode    => '0644',
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0444',
     content => $config_hash.pe_metric_curl_cron_jobs::to_yaml(),
   }
 
   $script_file_name = "${scripts_dir}/${metric_script_file}"
 
+  # Old versions of this module ran collection as root
   cron { "${metrics_type}_metrics_collection" :
+    ensure => absent,
+    user   => 'root',
+  }
+
+  cron { "pe_metric_curl_cron_jobs: ${metrics_type}_metrics_collection" :
     ensure  => $metric_ensure,
     command => "${script_file_name} --metrics_type ${metrics_type} --output-dir ${metrics_output_dir} --no-print",
-    user    => 'root',
+    user    => 'pe_metric_curl_cron_jobs',
     minute  => $cron_minute,
   }
 
@@ -50,7 +61,9 @@ define pe_metric_curl_cron_jobs::pe_metric (
 
   file { $metrics_tidy_script_path :
     ensure  => $metric_ensure,
-    mode    => '0744',
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0555',
     content => epp('pe_metric_curl_cron_jobs/tidy_cron.epp',
                    { 'metrics_output_dir' => $metrics_output_dir,
                      'metrics_type'       => $metrics_type,
@@ -58,9 +71,15 @@ define pe_metric_curl_cron_jobs::pe_metric (
                    }),
   }
 
+  # Old versions of this module ran tidy as root
   cron { "${metrics_type}_metrics_tidy" :
+    ensure => absent,
+    user   => 'root',
+  }
+
+  cron { "pe_metric_curl_cron_jobs: ${metrics_type}_metrics_tidy" :
     ensure  => $metric_ensure,
-    user    => 'root',
+    user    => 'pe_metric_curl_cron_jobs',
     hour    => fqdn_rand(3,  $metrics_type ),
     minute  => (5 * fqdn_rand(11, $metrics_type )),
     command => $metrics_tidy_script_path

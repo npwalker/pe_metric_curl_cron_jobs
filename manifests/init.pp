@@ -23,24 +23,38 @@ class pe_metric_curl_cron_jobs (
   $scripts_dir = "${output_dir}/scripts"
   $bin_dir     = "${output_dir}/bin"
 
-  file { [ $output_dir, $scripts_dir, $bin_dir] :
-    ensure => directory,
+  user { 'pe_metric_curl_cron_jobs':
+    ensure     => present,
+    home       => $output_dir,
+    managehome => false,
+    system     => true,
+    shell      => '/sbin/nologin',
   }
 
-  file { "${scripts_dir}/tk_metrics" :
-    ensure  => present,
-    mode    => '0755',
-    source  => 'puppet:///modules/pe_metric_curl_cron_jobs/tk_metrics'
-  }
-
-  file { "${bin_dir}/puppet-metrics-collector":
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0755',
-    content => epp('pe_metric_curl_cron_jobs/puppet-metrics-collector.epp', {
-      'output_dir' => $output_dir,
-    }),
+  file {
+    default:
+      owner => 'root',
+      group => 'root',
+      mode  => '0555',
+    ;
+    [$output_dir, $scripts_dir, $bin_dir]:
+      ensure       => directory,
+      purge        => true,
+      force        => true,
+      recurse      => true,
+      # Don't purge the output directories:
+      recurselimit => 1,
+    ;
+    "${scripts_dir}/tk_metrics" :
+      ensure => file,
+      source => 'puppet:///modules/pe_metric_curl_cron_jobs/tk_metrics',
+    ;
+    "${bin_dir}/puppet-metrics-collector":
+      ensure  => file,
+      content => epp('pe_metric_curl_cron_jobs/puppet-metrics-collector.epp', {
+        'output_dir' => $output_dir,
+      }),
+    ;
   }
 
   $symlink_ensure = $symlink_puppet_metrics_collector ? {
