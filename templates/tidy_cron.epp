@@ -3,6 +3,9 @@
       Integer $retention_days,
 | -%>
 #!/bin/sh
+
+set -e
+
 DIR='<%= $metrics_output_dir %>';
 METRICS_TYPE='<%= $metrics_type %>';
 RETENTION_DAYS=<%= $retention_days %>;
