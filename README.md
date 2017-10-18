@@ -120,16 +120,16 @@ puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorPercentUsage": 0,
 
 ## Sharing Metrics data
 
-A common use of this module is for a support organization to assist Puppet Enterprise users in diagnosing problems by analyzing metrics. If working with a support organization or other outside party, you may need to create a metrics data tarball to transport and share your metrics data.
+When working on performance tuning you may be asked to create a metrics data tarball to transport and share your metrics data.
 
-The module creates a utility script on classified nodes to aid in preparing metrics data for transport.
+The module provides a utility script, `puppet-metrics-collector` to aid in preparing metrics data for transport.
 
 ```
 [root@master ~]# /opt/puppetlabs/bin/puppet-metrics-collector create-tarball
 Metrics data tarball created at: /root/puppet-metrics-20170801T180338Z.tar.gz
 ```
 
-The script will create a tarball in the current working directory with all the metrics information that's been collected, ready to transfer to an external support organization or assisting party.
+The script creates a tarball containing your metrics in the current working directory.dd
 
 # How to use
 
