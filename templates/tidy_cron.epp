@@ -3,6 +3,9 @@
       Integer $retention_days,
 | -%>
 #!/bin/sh
+
+set -e
+
 DIR='<%= $metrics_output_dir %>';
 METRICS_TYPE='<%= $metrics_type %>';
 RETENTION_DAYS=<%= $retention_days %>;
@@ -12,7 +15,7 @@ find "$DIR" -type f -ctime +$RETENTION_DAYS -delete
 
 #compress files
 cd "$DIR"
-find . -type f ! -name "*.bz2" > "$DIR.tmp";
-xargs -a "$DIR.tmp" tar -jcf "$DIR/$METRICS_TYPE-$(date +%Y.%m.%d.%H.%M.%S).tar.bz2" 2>/dev/null;
-xargs -a "$DIR.tmp" rm ;
-rm "$DIR.tmp";
+find . -type f -not -name "*.gz" -a -not -name "*.bz2" > "$DIR.tmp"
+xargs -a "$DIR.tmp" tar -zcf "$DIR/$METRICS_TYPE-$(date +%Y.%m.%d.%H.%M.%S).tar.gz"
+xargs -a "$DIR.tmp" rm
+rm "$DIR.tmp"

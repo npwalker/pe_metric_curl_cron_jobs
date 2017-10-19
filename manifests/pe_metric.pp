@@ -22,7 +22,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   }
 
   $config_hash = {
-    'hosts'              => $hosts,
+    'hosts'              => $hosts.sort(),
     'metrics-type'       => $metrics_type,
     'metrics-port'       => $metrics_port,
     'additional-metrics' => $additional_metrics,
