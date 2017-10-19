@@ -1,3 +1,9 @@
+# Minor Release 4.5.0
+
+## Improvements:
+ - Add a script to zip up metrics for sharing
+   - [PR #41](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/41)
+
 # Z Release 4.4.2
 
 ## Bug Fixes:
