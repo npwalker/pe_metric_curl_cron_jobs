@@ -1,3 +1,14 @@
+# Z Release 4.4.2
+
+## Bug Fixes:
+ - Tidy script does not work without bzip (not installed on RHEL 7 by default)
+   - The tidy script now uses gzip which is more regularly available
+   - [PR #45](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/45)
+ - Tidy script would not exit on error
+   - [PR #43](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/43)
+ - Config file could change every run if you use puppetdb_query to find the hosts
+   - [PR #42](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/42)
+
 # Z Release 4.4.1
 
 ## Bug Fixes:
