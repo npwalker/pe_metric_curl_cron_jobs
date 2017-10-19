@@ -7,6 +7,7 @@ Table of Contents
   * [Grepping for Metrics](#grepping-for-metrics)
     * [Puppetserver](#puppetserver)
     * [PuppetDB](#puppetdb)
+  * [Sharing Metrics data](#sharing-metrics-data)
 * [How to use](#how-to-use)
   * [Monolithic Install](#monolithic-install)
     * [Hiera data Example](#hiera-data-example)
@@ -104,7 +105,7 @@ puppetdb/127.0.0.1/20170404T171502Z.json:            "queue_depth": 0,
 
 PE 2016.5 and below:
 
-~~~
+```
 grep Cursor puppetdb/127.0.0.1/*.json
 puppetdb/127.0.0.1/20170404T171001Z.json:          "CursorMemoryUsage": 0,
 puppetdb/127.0.0.1/20170404T171001Z.json:          "CursorFull": false,
@@ -115,7 +116,20 @@ puppetdb/127.0.0.1/20170404T171502Z.json:          "CursorPercentUsage": 0,
 puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorMemoryUsage": 0,
 puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorFull": false,
 puppetdb/127.0.0.1/20170404T172002Z.json:          "CursorPercentUsage": 0,
-~~~
+```
+
+## Sharing Metrics data
+
+When working on performance tuning you may be asked to create a metrics data tarball to transport and share your metrics data.
+
+The module provides a utility script, `puppet-metrics-collector` to aid in preparing metrics data for transport.
+
+```
+[root@master ~]# /opt/puppetlabs/bin/puppet-metrics-collector create-tarball
+Metrics data tarball created at: /root/puppet-metrics-20170801T180338Z.tar.gz
+```
+
+The script creates a tarball containing your metrics in the current working directory.dd
 
 # How to use
 

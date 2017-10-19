@@ -1,0 +1,23 @@
+<%- | String $output_dir,
+| -%>
+#!/bin/bash
+
+
+[ "$1" = "create-tarball" ] || { echo >&2 "ERROR: Usage: $0 create-tarball"; exit 1; }
+
+timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
+tarball="puppet-metrics-${timestamp}.tar.gz"
+
+output_dir="<%= $output_dir %>"
+cwd=$(dirname "${output_dir}")
+target=$(basename "${output_dir}")
+
+tar \
+  --exclude scripts \
+  --exclude bin \
+  --transform "s/${target}/puppet-metrics-${timestamp}/" \
+  -czf "${tarball}" \
+  -C "${cwd}" \
+  "${target}"
+
+echo "Metrics data tarball created at: $(pwd)/${tarball}"

@@ -18,17 +18,39 @@ class pe_metric_curl_cron_jobs (
   String        $activemq_metrics_ensure       = 'absent',
   Array[String] $activemq_hosts                = [ '127.0.0.1' ],
   Integer       $activemq_port                 = 8161,
+  Boolean       $symlink_puppet_metrics_collector = true,
 ) {
   $scripts_dir = "${output_dir}/scripts"
+  $bin_dir     = "${output_dir}/bin"
 
-  file { [ $output_dir, $scripts_dir ] :
+  file { [ $output_dir, $scripts_dir, $bin_dir] :
     ensure => directory,
   }
 
   file { "${scripts_dir}/tk_metrics" :
     ensure  => present,
-    mode    => '0744',
+    mode    => '0755',
     source  => 'puppet:///modules/pe_metric_curl_cron_jobs/tk_metrics'
+  }
+
+  file { "${bin_dir}/puppet-metrics-collector":
+    ensure  => file,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    content => epp('pe_metric_curl_cron_jobs/puppet-metrics-collector.epp', {
+      'output_dir' => $output_dir,
+    }),
+  }
+
+  $symlink_ensure = $symlink_puppet_metrics_collector ? {
+    false  => 'absent',
+    true   => 'symlink',
+  }
+
+  file { "/opt/puppetlabs/bin/puppet-metrics-collector":
+    ensure => $symlink_ensure,
+    target => "${bin_dir}/puppet-metrics-collector",
   }
 
   include pe_metric_curl_cron_jobs::puppetserver
