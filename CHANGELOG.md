@@ -1,3 +1,9 @@
+# Minor Release 4.6.0
+
+## Improvements:
+ - Add PuppetDB HA Metrics
+   - [PR #46](https://github.com/npwalker/pe_metric_curl_cron_jobs/pull/46)
+
 # Minor Release 4.5.0
 
 ## Improvements:
