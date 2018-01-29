@@ -4,6 +4,7 @@ class pe_metric_curl_cron_jobs::puppetdb (
   String        $metrics_ensure       = $::pe_metric_curl_cron_jobs::puppetdb_metrics_ensure,
   Array[String] $hosts                = $::pe_metric_curl_cron_jobs::puppetdb_hosts,
   Integer       $port                 = $::pe_metric_curl_cron_jobs::puppetdb_port,
+  Optional[String] $influxdb_host     = $::pe_metric_curl_cron_jobs::influxdb_host,
 ) {
   Pe_metric_curl_cron_jobs::Pe_metric {
     output_dir     => $::pe_metric_curl_cron_jobs::output_dir,
@@ -185,5 +186,6 @@ class pe_metric_curl_cron_jobs::puppetdb (
     metrics_port       => $_port,
     ssl                => $_ssl,
     additional_metrics => $additional_metrics,
+    influxdb_host      => $influxdb_host,
   }
 }

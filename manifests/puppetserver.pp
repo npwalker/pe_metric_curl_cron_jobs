@@ -4,6 +4,7 @@ class pe_metric_curl_cron_jobs::puppetserver (
   String        $metrics_ensure       = $::pe_metric_curl_cron_jobs::puppetserver_metrics_ensure,
   Array[String] $hosts                = $::pe_metric_curl_cron_jobs::puppetserver_hosts,
   Integer       $port                 = $::pe_metric_curl_cron_jobs::puppetserver_port,
+  Optional[String] $influxdb_host     = $::pe_metric_curl_cron_jobs::influxdb_host,
 ) {
   Pe_metric_curl_cron_jobs::Pe_metric {
     output_dir     => $::pe_metric_curl_cron_jobs::output_dir,
@@ -16,6 +17,7 @@ class pe_metric_curl_cron_jobs::puppetserver (
     metric_ensure => $metrics_ensure,
     hosts         => $hosts,
     metrics_port  => $port,
+    influxdb_host => $influxdb_host,
   }
 
   # DEPRECATION MECHANISMS

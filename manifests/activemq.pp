@@ -4,6 +4,7 @@ class pe_metric_curl_cron_jobs::activemq (
   String        $metrics_ensure       = $::pe_metric_curl_cron_jobs::activemq_metrics_ensure,
   Array[String] $hosts                = $::pe_metric_curl_cron_jobs::activemq_hosts,
   Integer       $port                 = $::pe_metric_curl_cron_jobs::activemq_port,
+  Optional[String] $influxdb_host     = $::pe_metric_curl_cron_jobs::influxdb_host,
 ) {
   $scripts_dir = $::pe_metric_curl_cron_jobs::scripts_dir
 
@@ -64,5 +65,6 @@ class pe_metric_curl_cron_jobs::activemq (
     metrics_port           => $port,
     metric_script_file     => 'amq_metrics',
     additional_metrics     => $additional_metrics,
+    influxdb_host          => $influxdb_host,
   }
 }

@@ -10,6 +10,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   String                    $metric_script_file = 'tk_metrics',
   Array[Hash]               $additional_metrics = [],
   Boolean                   $ssl                = true,
+  Optional[String]          $influxdb_host      = undef,
 ) {
 
   $metrics_output_dir = "${output_dir}/${metrics_type}"
@@ -38,10 +39,19 @@ define pe_metric_curl_cron_jobs::pe_metric (
   }
 
   $script_file_name = "${scripts_dir}/${metric_script_file}"
+  $conversion_script_file_name = "${scripts_dir}/json2timeseriesdb"
+
+  $metrics_base_command = "${script_file_name} --metrics_type ${metrics_type} --output-dir ${metrics_output_dir}"
+
+  if !empty($influxdb_host) {
+    $metrics_command = "${metrics_base_command} | ${conversion_script_file_name} --netcat ${influxdb_host} --convert-to influxdb --influx-db pe_metrics"
+  } else {
+    $metrics_command = "${metrics_base_command} --no-print"
+  }
 
   cron { "${metrics_type}_metrics_collection" :
     ensure  => $metric_ensure,
-    command => "${script_file_name} --metrics_type ${metrics_type} --output-dir ${metrics_output_dir} --no-print",
+    command => $metrics_command,
     user    => 'root',
     minute  => $cron_minute,
   }
