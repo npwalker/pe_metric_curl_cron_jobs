@@ -19,7 +19,7 @@ class pe_metric_curl_cron_jobs (
   Array[String] $activemq_hosts                = [ '127.0.0.1' ],
   Integer       $activemq_port                 = 8161,
   Boolean       $symlink_puppet_metrics_collector = true,
-  Optional[String] $influxdb_host                 = undef,
+  Optional[Pe_metric_curl_cron_jobs::Metrics_server] $metrics_server_info = undef,
 ) {
   $scripts_dir = "${output_dir}/scripts"
   $bin_dir     = "${output_dir}/bin"
