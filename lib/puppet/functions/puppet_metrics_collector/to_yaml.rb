@@ -1,6 +1,6 @@
 require 'yaml'
 
-Puppet::Functions.create_function(:'pe_metric_curl_cron_jobs::to_yaml') do
+Puppet::Functions.create_function(:'puppet_metrics_collector::to_yaml') do
   dispatch :to_yaml do
     param 'Hash', :hash_or_array
   end

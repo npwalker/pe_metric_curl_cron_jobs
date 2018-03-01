@@ -1,12 +1,12 @@
 {
-  "name": "npwalker/pe_metric_curl_cron_jobs",
-  "version": "4.6.0",
+  "name": "npwalker/puppet_metrics_collector",
+  "version": "5.0.0",
   "author": "npwalker",
   "summary": "A Puppet module for gathering metrics from PE components",
   "license": "Apache-2.0",
-  "source": "https://github.com/npwalker/pe_metric_curl_cron_jobs",
-  "project_page": "https://github.com/npwalker/pe_metric_curl_cron_jobs",
-  "issues_url": "https://github.com/npwalker/pe_metric_curl_cron_jobs/issues",
+  "source": "https://github.com/npwalker/puppet_metrics_collector",
+  "project_page": "https://github.com/npwalker/puppet_metrics_collector",
+  "issues_url": "https://github.com/npwalker/puppet_metrics_collector/issues",
   "dependencies": [
     {"name":"puppetlabs-stdlib","version_requirement":">= 2.6.0 < 5.0.0"}
   ],

@@ -1,14 +1,14 @@
-class pe_metric_curl_cron_jobs::activemq (
-  Integer       $collection_frequency = $::pe_metric_curl_cron_jobs::collection_frequency,
-  Integer       $retention_days       = $::pe_metric_curl_cron_jobs::retention_days,
-  String        $metrics_ensure       = $::pe_metric_curl_cron_jobs::activemq_metrics_ensure,
-  Array[String] $hosts                = $::pe_metric_curl_cron_jobs::activemq_hosts,
-  Integer       $port                 = $::pe_metric_curl_cron_jobs::activemq_port,
+class puppet_metrics_collector::activemq (
+  Integer       $collection_frequency = $puppet_metrics_collector::collection_frequency,
+  Integer       $retention_days       = $puppet_metrics_collector::retention_days,
+  String        $metrics_ensure       = $puppet_metrics_collector::activemq_metrics_ensure,
+  Array[String] $hosts                = $puppet_metrics_collector::activemq_hosts,
+  Integer       $port                 = $puppet_metrics_collector::activemq_port,
 ) {
-  $scripts_dir = $::pe_metric_curl_cron_jobs::scripts_dir
+  $scripts_dir = $::puppet_metrics_collector::scripts_dir
 
-  Pe_metric_curl_cron_jobs::Pe_metric {
-    output_dir     => $::pe_metric_curl_cron_jobs::output_dir,
+  Puppet_metrics_collector::Pe_metric {
+    output_dir     => $::puppet_metrics_collector::output_dir,
     scripts_dir    => $scripts_dir,
     cron_minute    => "*/${collection_frequency}",
     retention_days => $retention_days,
@@ -55,10 +55,10 @@ class pe_metric_curl_cron_jobs::activemq (
   file { "${scripts_dir}/amq_metrics" :
     ensure  => present,
     mode    => '0744',
-    source  => 'puppet:///modules/pe_metric_curl_cron_jobs/amq_metrics',
+    source  => 'puppet:///modules/puppet_metrics_collector/amq_metrics',
   }
 
-  pe_metric_curl_cron_jobs::pe_metric { 'activemq' :
+  puppet_metrics_collector::pe_metric { 'activemq' :
     metric_ensure          => $metrics_ensure,
     hosts                  => $hosts,
     metrics_port           => $port,

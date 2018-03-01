@@ -1,3 +1,16 @@
+# Major Release 5.0.0
+
+This major release renames the project and obseletes deprecated parameters that
+had previously been preserved for backwards compatiblity. The new name of the
+project aligns it with the value it provides, and eliminates long incorrect
+technology references to its implementation from the name.
+
+## Changes
+ - Rename the project from "pe\_metric\_curl\_cron\_jobs" to "puppet\_metrics\_collector"
+ - Remove deprecated parameters
+   - puppet\_metrics\_collector::puppet\_server\_hosts (long deprecated in favor of puppet\_metrics\_collector::puppetserver\_hosts)
+   - puppet\_metrics\_collector::puppet\_server\_port (long deprecated in favor of puppet\_metrics\_collector::puppetserver\_port)
+
 # Minor Release 4.6.0
 
 ## Improvements:
