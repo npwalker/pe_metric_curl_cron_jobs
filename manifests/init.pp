@@ -53,4 +53,17 @@ class puppet_metrics_collector (
   include puppet_metrics_collector::puppetdb
   include puppet_metrics_collector::orchestrator
   include puppet_metrics_collector::activemq
+
+  # LEGACY CLEANUP
+  # This exec resource exists to clean up old metrics directories created by
+  # the module before it was renamed.
+  $legacy_dir      = '/opt/puppetlabs/pe_metric_curl_cron_jobs'
+  $safe_output_dir = shellquote($output_dir)
+
+  exec { "migrate ${legacy_dir} directory":
+    path    => '/bin:/usr/bin',
+    command => "mv ${legacy_dir} ${safe_output_dir}",
+    onlyif  => "[ ! -e ${safe_output_dir} -a -e ${legacy_dir} ]",
+    before  => File[$output_dir],
+  }
 }
