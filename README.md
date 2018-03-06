@@ -31,19 +31,19 @@ By default, the module tracks the metrics coming from the status endpoint on Pup
 
 ## Directory layout
 
-You have a new directory `/opt/puppetlabs/puppet_metrics_collector` that has one directory per component  (Puppet Server, PuppetDB, or ActiveMQ).  Each component has one directory per host that metrics are gathered from.  Each host directory contains one JSON file collected every 5 minutes by default.  Once per day the metrics for each component are compressed for every host and saved in the root of that component's directory.
+You have a new directory `/opt/puppetlabs/puppet-metrics-collector` that has one directory per component  (Puppet Server, PuppetDB, or ActiveMQ).  Each component has one directory per host that metrics are gathered from.  Each host directory contains one JSON file collected every 5 minutes by default.  Once per day the metrics for each component are compressed for every host and saved in the root of that component's directory.
 
 Here's an example:
 
 ~~~
-/opt/puppetlabs/puppet_metrics_collector/puppetserver
+/opt/puppetlabs/puppet-metrics-collector/puppetserver
 ├── 127.0.0.1
 │   ├── 20170404T020001Z.json
 │   ├── ...
 │   ├── 20170404T170501Z.json
 │   └── 20170404T171001Z.json
 └── puppetserver-2017.04.04.02.00.01.tar.bz2
-/opt/puppetlabs/puppet_metrics_collector/puppetdb
+/opt/puppetlabs/puppet-metrics-collector/puppetdb
 └── 127.0.0.1
 │   ├── 20170404T020001Z.json
 │   ├── ...
@@ -67,9 +67,9 @@ Example:
 crontab -l
 ...
 # Puppet Name: puppetserver_metrics_collection
-*/5 * * * * /opt/puppetlabs/puppet_metrics_collector/scripts/puppetserver_metrics
+*/5 * * * * /opt/puppetlabs/puppet-metrics-collector/scripts/puppetserver_metrics
 # Puppet Name: puppetserver_metrics_tidy
-0 2 * * * /opt/puppetlabs/puppet_metrics_collector/scripts/puppetserver_metrics_tidy
+0 2 * * * /opt/puppetlabs/puppet-metrics-collector/scripts/puppetserver_metrics_tidy
 ~~~
 
 ## Grepping for Metrics
@@ -77,7 +77,7 @@ crontab -l
 You can get useful information with a grep like the one below run from inside of the directory containing the metrics files.  Since the metrics are compressed every night you can only grep metrics for the current day.  If you'd like to grep over a longer period of time you should decompress the compressed tarballs into `/tmp` and investigate further.
 
 ~~~
-cd /opt/puppetlabs/puppet_metrics_collector
+cd /opt/puppetlabs/puppet-metrics-collector
 grep <metric_name> <component_name>/127.0.0.1/*.json
 ~~~
 
