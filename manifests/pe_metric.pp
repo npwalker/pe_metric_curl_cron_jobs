@@ -1,4 +1,4 @@
-define pe_metric_curl_cron_jobs::pe_metric (
+define puppet_metrics_collector::pe_metric (
   Enum['absent', 'present'] $metric_ensure  = 'present',
   String                    $output_dir,
   String                    $scripts_dir,
@@ -34,7 +34,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   file { "${scripts_dir}/${metrics_type}_config.yaml" :
     ensure  => $metric_ensure,
     mode    => '0644',
-    content => $config_hash.pe_metric_curl_cron_jobs::to_yaml(),
+    content => $config_hash.puppet_metrics_collector::to_yaml(),
   }
 
   $script_file_name = "${scripts_dir}/${metric_script_file}"
@@ -51,7 +51,7 @@ define pe_metric_curl_cron_jobs::pe_metric (
   file { $metrics_tidy_script_path :
     ensure  => $metric_ensure,
     mode    => '0744',
-    content => epp('pe_metric_curl_cron_jobs/tidy_cron.epp',
+    content => epp('puppet_metrics_collector/tidy_cron.epp',
                    { 'metrics_output_dir' => $metrics_output_dir,
                      'metrics_type'       => $metrics_type,
                      'retention_days'     => $retention_days,
